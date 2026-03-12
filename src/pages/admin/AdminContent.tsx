@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminContent() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Content Performance</h1>
           <p className="text-muted-foreground">Engagement metrics across all content types</p>
