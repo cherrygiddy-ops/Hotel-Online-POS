@@ -1,30 +1,19 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Shield, Handshake, BookOpen } from "lucide-react";
+import { BarChart3, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Role = "admin" | "partner" | "publisher";
-
-const roles: { id: Role; label: string; icon: typeof Shield; description: string }[] = [
-  { id: "admin", label: "Super Admin", icon: Shield, description: "Full platform analytics & management" },
-  { id: "partner", label: "Partner", icon: Handshake, description: "Revenue sharing & embedded content" },
-  { id: "publisher", label: "Publisher", icon: BookOpen, description: "Content analytics & payouts" },
-];
-
 export default function Login() {
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState<Role>("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedRole === "admin") navigate("/admin");
-    else if (selectedRole === "partner") navigate("/partner");
-    else navigate("/partner"); // publisher would have its own route
+    navigate("/admin");
   };
 
   return (
@@ -59,22 +48,16 @@ export default function Login() {
             <h1 className="text-4xl font-bold font-display text-primary-foreground">LoHo</h1>
           </div>
           <p className="text-xl text-primary-foreground/80 font-display leading-relaxed">
-            Revenue Distribution & Content Metrics Platform
+            Admin Control Center
           </p>
           <p className="mt-4 text-primary-foreground/50 leading-relaxed">
-            Fair, transparent compensation for content publishers and partners based on real user engagement.
+            Full platform analytics, revenue management, publisher oversight and system configuration.
           </p>
-          <div className="mt-12 grid grid-cols-3 gap-6">
-            {[
-              { label: "Publishers", value: "23+" },
-              { label: "Content Items", value: "145+" },
-              { label: "Active Users", value: "8.6K" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-bold font-display text-primary">{stat.value}</p>
-                <p className="text-sm text-primary-foreground/50">{stat.label}</p>
-              </div>
-            ))}
+          <div className="mt-12 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <Shield className="h-6 w-6 text-primary" />
+            <p className="text-sm text-primary-foreground/70">
+              This portal is restricted to authorized administrators only.
+            </p>
           </div>
         </motion.div>
       </div>
@@ -94,40 +77,21 @@ export default function Login() {
             <h1 className="text-2xl font-bold font-display">LoHo</h1>
           </div>
 
-          <h2 className="text-2xl font-bold font-display text-foreground">Welcome back</h2>
-          <p className="mt-1 text-muted-foreground">Sign in to your dashboard</p>
-
-          {/* Role Selection */}
-          <div className="mt-6 grid grid-cols-3 gap-3">
-            {roles.map((role) => (
-              <button
-                key={role.id}
-                onClick={() => setSelectedRole(role.id)}
-                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200 ${
-                  selectedRole === role.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-card hover:border-primary/30"
-                }`}
-              >
-                <role.icon className={`h-5 w-5 ${selectedRole === role.id ? "text-primary" : "text-muted-foreground"}`} />
-                <span className={`text-xs font-medium ${selectedRole === role.id ? "text-primary" : "text-muted-foreground"}`}>
-                  {role.label}
-                </span>
-              </button>
-            ))}
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="text-xs font-medium uppercase tracking-wider text-primary">Admin Portal</span>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            {roles.find((r) => r.id === selectedRole)?.description}
-          </p>
+          <h2 className="text-2xl font-bold font-display text-foreground">Welcome back, Admin</h2>
+          <p className="mt-1 text-muted-foreground">Sign in to manage the platform</p>
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <form onSubmit={handleLogin} className="mt-8 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@loho.com"
+                placeholder="admin@loho.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11"
@@ -151,6 +115,12 @@ export default function Login() {
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Demo mode — click Sign In with any credentials
+          </p>
+          <p className="mt-3 text-center text-sm text-muted-foreground">
+            Partner or Publisher?{" "}
+            <Link to="/partner-login" className="text-primary font-medium hover:underline">
+              Sign in here
+            </Link>
           </p>
         </motion.div>
       </div>
