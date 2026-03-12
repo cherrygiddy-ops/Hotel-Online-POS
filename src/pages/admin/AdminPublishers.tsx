@@ -4,8 +4,7 @@ import { Trophy } from "lucide-react";
 
 export default function AdminPublishers() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Publisher Insights</h1>
           <p className="text-muted-foreground">Top publishers by revenue and engagement</p>
