@@ -1,5 +1,4 @@
 import { StatCard } from "@/components/StatCard";
-import { StatCard } from "@/components/StatCard";
 import { adminStats, monthlyRevenue, contentTypeDistribution, subscriptionBreakdown } from "@/lib/mock-data";
 import { DollarSign, Users, BookOpen, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
