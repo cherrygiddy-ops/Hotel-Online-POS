@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, Download } from "lucide-react";
@@ -15,8 +15,7 @@ const receipts = [
 
 export default function PublisherReceipts() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Receipts & Payouts</h1>
           <p className="text-muted-foreground">Your payout history and downloadable receipts</p>
@@ -73,7 +72,6 @@ export default function PublisherReceipts() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { topContent, contentTypeDistribution } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -6,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminContent() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Content Performance</h1>
           <p className="text-muted-foreground">Engagement metrics across all content types</p>
@@ -53,7 +51,6 @@ export default function AdminContent() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

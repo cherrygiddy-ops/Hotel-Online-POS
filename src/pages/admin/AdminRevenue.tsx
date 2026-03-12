@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { monthlyRevenue } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import {
@@ -7,8 +6,7 @@ import {
 
 export default function AdminRevenue() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Revenue Overview</h1>
           <p className="text-muted-foreground">Monthly recognized revenue by subscription tier</p>
@@ -29,7 +27,6 @@ export default function AdminRevenue() {
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { partnerRevenue, partnerContentEarnings } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -6,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PublisherRevenue() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Revenue Breakdown</h1>
           <p className="text-muted-foreground">Detailed view of your content earnings and trends</p>
@@ -51,7 +49,6 @@ export default function PublisherRevenue() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

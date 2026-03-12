@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
 import { adminStats, monthlyRevenue, contentTypeDistribution, subscriptionBreakdown } from "@/lib/mock-data";
 import { DollarSign, Users, BookOpen, TrendingUp } from "lucide-react";
@@ -15,8 +14,7 @@ const COLORS = [
 
 export default function AdminOverview() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Dashboard Overview</h1>
           <p className="text-muted-foreground">Platform performance at a glance</p>
@@ -94,7 +92,6 @@ export default function AdminOverview() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

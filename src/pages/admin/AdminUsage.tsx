@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 
@@ -24,8 +24,7 @@ const COLORS = ["hsl(162,63%,41%)", "hsl(36,95%,55%)", "hsl(210,100%,56%)"];
 
 export default function AdminUsage() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Usage Patterns</h1>
           <p className="text-muted-foreground">Online vs offline consumption and device breakdown</p>
@@ -60,7 +59,6 @@ export default function AdminUsage() {
             </ResponsiveContainer>
           </motion.div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
