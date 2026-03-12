@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { partnerContentEarnings } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
