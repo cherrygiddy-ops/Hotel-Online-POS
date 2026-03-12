@@ -93,7 +93,6 @@ export default function AdminOverview() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
