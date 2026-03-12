@@ -13,8 +13,7 @@ const publisherStats = {
 
 export default function PublisherDashboard() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Publisher Dashboard</h1>
           <p className="text-muted-foreground">Your content performance at a glance</p>
