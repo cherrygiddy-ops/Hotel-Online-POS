@@ -6,8 +6,7 @@ import {
 
 export default function AdminRevenue() {
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Revenue Overview</h1>
           <p className="text-muted-foreground">Monthly recognized revenue by subscription tier</p>
