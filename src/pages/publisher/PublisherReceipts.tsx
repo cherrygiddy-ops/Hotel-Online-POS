@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, Download } from "lucide-react";
