@@ -59,7 +59,6 @@ export default function AdminUsage() {
             </ResponsiveContainer>
           </motion.div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

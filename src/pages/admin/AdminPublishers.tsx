@@ -69,7 +69,6 @@ export default function AdminPublishers() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

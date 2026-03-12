@@ -51,7 +51,6 @@ export default function AdminContent() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

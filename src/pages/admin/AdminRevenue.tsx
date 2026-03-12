@@ -27,7 +27,6 @@ export default function AdminRevenue() {
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
