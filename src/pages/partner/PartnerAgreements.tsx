@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { partnerAgreement } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { ArrowUp, Info } from "lucide-react";
