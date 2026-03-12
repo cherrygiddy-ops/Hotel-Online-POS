@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { topPublishers } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
