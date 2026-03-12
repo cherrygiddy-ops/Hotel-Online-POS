@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PublisherContent() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Content Analytics</h1>
           <p className="text-muted-foreground">Track your content performance and engagement</p>
