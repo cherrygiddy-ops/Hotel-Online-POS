@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import {
-  BarChart3, BookOpen, DollarSign, FileText, LayoutDashboard, LogOut, Settings, Users, Handshake, TrendingUp, Activity
+  BarChart3, BookOpen, DollarSign, FileText, LayoutDashboard, LogOut, Users, Handshake, TrendingUp, Activity, Receipt
 } from "lucide-react";
 
 const adminLinks = [
@@ -24,12 +24,30 @@ const partnerLinks = [
   { title: "Agreements", url: "/partner/agreements", icon: FileText },
 ];
 
-function AppSidebar({ role }: { role: "admin" | "partner" }) {
+const publisherLinks = [
+  { title: "Dashboard", url: "/publisher", icon: LayoutDashboard },
+  { title: "Content Analytics", url: "/contentAnalytics", icon: BookOpen },
+  { title: "Revenue Breakdown", url: "/revenueBreakdown", icon: TrendingUp },
+  { title: "Receipts", url: "/receipts", icon: Receipt },
+];
+
+const roleConfig = {
+  admin: { links: adminLinks, label: "Admin Panel", title: "Super Admin" },
+  partner: { links: partnerLinks, label: "Partner Panel", title: "Partner" },
+  publisher: { links: publisherLinks, label: "Publisher Panel", title: "Publisher" },
+};
+
+function AppSidebar({ role }: { role: "admin" | "partner" | "publisher" }) {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const links = role === "admin" ? adminLinks : partnerLinks;
-  const location = useLocation();
+  const { links } = roleConfig[role];
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("loho-auth");
+    sessionStorage.removeItem("loho-role");
+    navigate(role === "admin" ? "/admin-login" : "/");
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -44,7 +62,7 @@ function AppSidebar({ role }: { role: "admin" | "partner" }) {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>{role === "admin" ? "Admin Panel" : "Partner Panel"}</SidebarGroupLabel>
+          <SidebarGroupLabel>{roleConfig[role].label}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {links.map((item) => (
@@ -64,7 +82,7 @@ function AppSidebar({ role }: { role: "admin" | "partner" }) {
         <div className="mt-auto p-4">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => navigate("/login")} className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
+              <SidebarMenuButton onClick={handleLogout} className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
                 <LogOut className="mr-2 h-4 w-4" />
                 {!collapsed && <span>Log Out</span>}
               </SidebarMenuButton>
@@ -76,7 +94,7 @@ function AppSidebar({ role }: { role: "admin" | "partner" }) {
   );
 }
 
-export function DashboardLayout({ children, role }: { children: ReactNode; role: "admin" | "partner" }) {
+export function DashboardLayout({ children, role }: { children: ReactNode; role: "admin" | "partner" | "publisher" }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -85,7 +103,7 @@ export function DashboardLayout({ children, role }: { children: ReactNode; role:
           <header className="h-14 flex items-center border-b border-border bg-card px-4">
             <SidebarTrigger className="mr-4" />
             <h2 className="text-sm font-medium text-muted-foreground capitalize">
-              {role === "admin" ? "Super Admin" : "Partner"} Dashboard
+              {roleConfig[role].title} Dashboard
             </h2>
           </header>
           <main className="flex-1 p-6 overflow-auto">{children}</main>
