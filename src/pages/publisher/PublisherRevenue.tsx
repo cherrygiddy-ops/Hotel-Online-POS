@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PublisherRevenue() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Revenue Breakdown</h1>
           <p className="text-muted-foreground">Detailed view of your content earnings and trends</p>
