@@ -27,6 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/partner-login" element={<PartnerLogin />} />
           {/* Admin routes */}
           <Route path="/admin" element={<AdminOverview />} />
           <Route path="/admin/revenue" element={<AdminRevenue />} />
