@@ -15,8 +15,7 @@ const receipts = [
 
 export default function PublisherReceipts() {
   return (
-    <DashboardLayout role="publisher">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Receipts & Payouts</h1>
           <p className="text-muted-foreground">Your payout history and downloadable receipts</p>
