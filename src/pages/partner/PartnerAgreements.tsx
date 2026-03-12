@@ -8,8 +8,7 @@ export default function PartnerAgreements() {
   const growth = (((currentMonth.netEarnings - previousMonth.netEarnings) / previousMonth.netEarnings) * 100).toFixed(1);
 
   return (
-    <DashboardLayout role="partner">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Agreement & Impact</h1>
           <p className="text-muted-foreground">Your revenue share terms and deduction breakdown</p>
