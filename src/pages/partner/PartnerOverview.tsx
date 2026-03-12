@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
 import { partnerStats, partnerRevenue } from "@/lib/mock-data";
 import { DollarSign, Users, BookOpen, Percent } from "lucide-react";
