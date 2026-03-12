@@ -70,7 +70,6 @@ export default function PartnerAgreements() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

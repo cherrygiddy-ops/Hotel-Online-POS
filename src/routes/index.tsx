@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/components/Layout";
-import PrivateRoutes from "./PrivateRoutes";
+import { PublisherPrivateRoutes, PartnerPrivateRoutes, AdminPrivateRoutes } from "./PrivateRoutes";
 import ErrorPage from "@/pages/ErrorPage";
 import Login from "@/pages/Login";
 import AdminLogin from "@/pages/AdminLogin";
@@ -29,20 +29,29 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <PrivateRoutes />,
+    element: <PublisherPrivateRoutes />,
     errorElement: <ErrorPage />,
     children: [
-      // Publisher routes
       { path: "publisher", element: <PublisherDashboard /> },
       { path: "contentAnalytics", element: <PublisherContent /> },
       { path: "receipts", element: <PublisherReceipts /> },
       { path: "revenueBreakdown", element: <PublisherRevenue /> },
-      // Partner routes
+    ],
+  },
+  {
+    element: <PartnerPrivateRoutes />,
+    errorElement: <ErrorPage />,
+    children: [
       { path: "partner", element: <PartnerOverview /> },
       { path: "partner/revenue", element: <PartnerRevenue /> },
       { path: "partner/content", element: <PartnerContent /> },
       { path: "partner/agreements", element: <PartnerAgreements /> },
-      // Admin routes
+    ],
+  },
+  {
+    element: <AdminPrivateRoutes />,
+    errorElement: <ErrorPage />,
+    children: [
       { path: "admin", element: <AdminOverview /> },
       { path: "admin/revenue", element: <AdminRevenueView /> },
       { path: "admin/content", element: <AdminContentView /> },

@@ -72,7 +72,6 @@ export default function PublisherReceipts() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

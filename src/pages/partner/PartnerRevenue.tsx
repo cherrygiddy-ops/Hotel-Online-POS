@@ -35,7 +35,6 @@ export default function PartnerRevenue() {
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

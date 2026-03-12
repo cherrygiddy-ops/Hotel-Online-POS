@@ -51,7 +51,6 @@ export default function PublisherContent() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

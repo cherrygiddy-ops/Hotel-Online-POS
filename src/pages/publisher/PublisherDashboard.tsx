@@ -44,7 +44,6 @@ export default function PublisherDashboard() {
             </AreaChart>
           </ResponsiveContainer>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

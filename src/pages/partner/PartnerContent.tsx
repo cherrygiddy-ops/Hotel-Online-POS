@@ -34,7 +34,6 @@ export default function PartnerContent() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

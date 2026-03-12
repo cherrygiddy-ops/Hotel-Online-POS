@@ -49,7 +49,6 @@ export default function PublisherRevenue() {
             </table>
           </div>
         </motion.div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
