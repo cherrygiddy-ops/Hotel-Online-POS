@@ -4,8 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function PartnerRevenue() {
   return (
-    <DashboardLayout role="partner">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Revenue Sharing</h1>
           <p className="text-muted-foreground">Monthly revenue from referrals and embedded content</p>
