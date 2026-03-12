@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PartnerContent() {
   return (
-    <DashboardLayout role="partner">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold font-display">Embedded Content Earnings</h1>
           <p className="text-muted-foreground">Performance of your hosted content on LoHo</p>
