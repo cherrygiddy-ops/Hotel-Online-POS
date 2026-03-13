@@ -1,77 +1,68 @@
-
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { FileDown } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { receipts } from "@/data/publisherMockData";
+import { toast } from "sonner";
+import DateRangeFilter from "./DateRangeFilter";
 
-const receipts = [
-  { id: "RCP-001", date: "Mar 2026", amount: 1760, status: "Paid", items: 4 },
-  { id: "RCP-002", date: "Feb 2026", amount: 1580, status: "Paid", items: 4 },
-  { id: "RCP-003", date: "Jan 2026", amount: 1420, status: "Paid", items: 3 },
-  { id: "RCP-004", date: "Dec 2025", amount: 1680, status: "Paid", items: 5 },
-  { id: "RCP-005", date: "Nov 2025", amount: 1340, status: "Paid", items: 3 },
-  { id: "RCP-006", date: "Oct 2025", amount: 1200, status: "Paid", items: 3 },
-];
 
 export default function PublisherReceipts() {
+    const [dateRange, setDateRange] = useState("1y");
+
+  const handleGeneratePdf = (receiptId: string) => {
+    toast.success(`PDF report generated for ${receiptId}`, { description: "Download will start shortly." });
+  };
   return (
     <div className="space-y-6">
+       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-display">Receipts & Payouts</h1>
-          <p className="text-muted-foreground">Your payout history and downloadable receipts</p>
+          <h1 className="text-3xl font-heading font-bold">Receipts</h1>
+          <p className="text-muted-foreground mt-1">Monthly payout statements and downloadable reports</p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { label: "Total Paid Out", value: `$${receipts.reduce((s, r) => s + r.amount, 0).toLocaleString()}` },
-            { label: "Total Receipts", value: receipts.length.toString() },
-            { label: "Avg Payout", value: `$${Math.round(receipts.reduce((s, r) => s + r.amount, 0) / receipts.length).toLocaleString()}` },
-          ].map((card, i) => (
-            <motion.div key={card.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="stat-card text-center">
-              <p className="text-sm text-muted-foreground">{card.label}</p>
-              <p className="mt-2 text-2xl font-bold font-display text-primary">{card.value}</p>
-            </motion.div>
-          ))}
+        <div className="flex gap-3">
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <Button onClick={() => toast.success("Full report PDF generated")} className="gap-2">
+            <FileDown className="h-4 w-4" /> Generate Report
+          </Button>
         </div>
+      </div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="stat-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Receipt className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-semibold font-display">Payout History</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Receipt ID</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Period</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Items</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {receipts.map((r) => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="py-3 px-4 font-medium font-mono text-sm">{r.id}</td>
-                    <td className="py-3 px-4">{r.date}</td>
-                    <td className="py-3 px-4 text-right">{r.items}</td>
-                    <td className="py-3 px-4 text-right text-primary font-medium">${r.amount.toLocaleString()}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">{r.status}</Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-foreground">
-                        <Download className="h-4 w-4 mr-1" /> PDF
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
+      <div className="glass-card rounded-xl p-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Receipt ID</TableHead>
+              <TableHead>Month</TableHead>
+              <TableHead className="text-right">Weighted Units</TableHead>
+              <TableHead className="text-right">Net Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {receipts.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-mono text-sm">{r.id}</TableCell>
+                <TableCell className="font-medium">{r.month}</TableCell>
+                <TableCell className="text-right">{r.units.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-semibold">${r.amount.toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge variant={r.status === "Paid" ? "default" : "secondary"} className={r.status === "Paid" ? "bg-success text-success-foreground" : ""}>
+                    {r.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => handleGeneratePdf(r.id)} className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <FileDown className="h-3.5 w-3.5" /> PDF
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

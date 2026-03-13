@@ -21,11 +21,11 @@ export const contentTypeDistribution = [
 ];
 
 export const topContent = [
-  { title: "Intro to Data Science", type: "Video", units: 3420, engagement: 92 },
-  { title: "Python Fundamentals", type: "eBook", units: 2890, engagement: 87 },
-  { title: "Network Security Lab", type: "Lab Sim", units: 2340, engagement: 95 },
-  { title: "Math Challenge", type: "Game", units: 1980, engagement: 78 },
-  { title: "Cloud Architecture", type: "Video", units: 1740, engagement: 84 },
+  { title: "I Am Special Bacause..", type: "Video", units: 3420, engagement: 92 },
+  { title: "Good Friend", type: "eBook", units: 2890, engagement: 87 },
+  { title: "Marafiki Wema", type: "Lab Sim", units: 2340, engagement: 95 },
+  { title: "Wash Away the Germs", type: "Game", units: 1980, engagement: 78 },
+  { title: "Tufukuze Vijidudu", type: "Video", units: 1740, engagement: 84 },
 ];
 
 export const topPublishers = [
@@ -56,10 +56,10 @@ export const partnerRevenue = [
 ];
 
 export const partnerContentEarnings = [
-  { title: "Embedded: AI Basics", units: 1240, revenue: 620, type: "Video" },
-  { title: "Embedded: Web Dev 101", units: 980, revenue: 490, type: "eBook" },
-  { title: "Embedded: Cyber Lab", units: 760, revenue: 380, type: "Lab Sim" },
-  { title: "Embedded: Math Games", units: 540, revenue: 270, type: "Game" },
+  { title: "Tufukuze Vijidudu", units: 1240, revenue: 620, type: "Video" },
+  { title: "Kikapu Cha Kuhesabia", units: 980, revenue: 490, type: "eBook" },
+  { title: "The Counting Baske", units: 760, revenue: 380, type: "Lab Sim" },
+  { title: "Oranges for Everyone", units: 540, revenue: 270, type: "Game" },
 ];
 
 export const partnerAgreement = {

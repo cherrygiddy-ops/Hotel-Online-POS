@@ -1,49 +1,77 @@
-import { StatCard } from "@/components/StatCard";
-import { partnerContentEarnings, partnerRevenue } from "@/lib/mock-data";
-import { BookOpen, DollarSign, Eye, TrendingUp } from "lucide-react";
-import { motion } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const publisherStats = {
-  totalContent: partnerContentEarnings.length,
-  totalUnits: partnerContentEarnings.reduce((s, c) => s + c.units, 0),
-  totalRevenue: partnerContentEarnings.reduce((s, c) => s + c.revenue, 0),
-  avgEngagement: 86,
-};
+import { DollarSign, TrendingUp, Package, Percent } from "lucide-react";
+import { publisherInfo, monthlyEarnings, revenueByContentType } from "@/data/publisherMockData";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import StatCard from "./StatCard";
 
 export default function PublisherDashboard() {
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold font-display">Publisher Dashboard</h1>
-          <p className="text-muted-foreground">Your content performance at a glance</p>
-        </div>
+         <div>
+        <h1 className="text-3xl font-heading font-bold">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Welcome back, {publisherInfo.name}</p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Content" value={publisherStats.totalContent.toString()} icon={BookOpen} delay={0} />
-          <StatCard title="Total Units" value={publisherStats.totalUnits.toLocaleString()} change="This month" icon={Eye} delay={0.1} />
-          <StatCard title="Total Revenue" value={`$${publisherStats.totalRevenue.toLocaleString()}`} change="+12.4%" icon={DollarSign} delay={0.2} />
-          <StatCard title="Avg Engagement" value={`${publisherStats.avgEngagement}%`} icon={TrendingUp} delay={0.3} changeType="neutral" />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Wallet Balance" value={`$${publisherInfo.walletBalance.toFixed(2)}`} icon={DollarSign} trend={9.8} />
+        <StatCard title="Total Earnings" value={`$${publisherInfo.totalEarnings.toFixed(2)}`} icon={TrendingUp} subtitle="All time" />
+        <StatCard title="Content Items" value={publisherInfo.totalContent.toString()} icon={Package} />
+        <StatCard title="Unit Share" value={`${publisherInfo.unitShare}%`} icon={Percent} trend={1.2} subtitle="Of total platform" />
+      </div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="stat-card">
-          <h3 className="text-lg font-semibold font-display mb-4">Monthly Earnings Trend</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 glass-card rounded-xl p-6">
+          <h3 className="font-heading font-semibold mb-4">Earnings Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={partnerRevenue}>
-              <defs>
-                <linearGradient id="publisherGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(210,100%,56%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(210,100%,56%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,15%,90%)" />
-              <XAxis dataKey="month" stroke="hsl(220,10%,46%)" fontSize={12} />
-              <YAxis stroke="hsl(220,10%,46%)" fontSize={12} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
-              <Area type="monotone" dataKey="earned" stroke="hsl(210,100%,56%)" fill="url(#publisherGrad)" strokeWidth={2} />
-            </AreaChart>
+            <LineChart data={monthlyEarnings}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `$${v}`} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontFamily: "var(--font-body)",
+                }}
+                formatter={(value: number) => [`$${value.toFixed(2)}`, "Earnings"]}
+              />
+              <Line type="monotone" dataKey="earnings" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: "hsl(var(--primary))", r: 4 }} />
+            </LineChart>
           </ResponsiveContainer>
-        </motion.div>
+        </div>
+
+        <div className="glass-card rounded-xl p-6">
+          <h3 className="font-heading font-semibold mb-4">Revenue by Type</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <PieChart>
+              <Pie data={revenueByContentType} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" paddingAngle={3}>
+                {revenueByContentType.map((entry, index) => (
+                  <Cell key={index} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                }}
+                formatter={(value: number) => [`${value}%`, "Share"]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="space-y-2 mt-2">
+            {revenueByContentType.map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                  <span className="text-muted-foreground">{item.name}</span>
+                </div>
+                <span className="font-medium">{item.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
