@@ -1,5 +1,5 @@
 # Stage 1: Build frontend
-FROM node:18 AS build
+FROM oven/bun:1 AS build
 WORKDIR /app
 COPY . .
 RUN bun install
