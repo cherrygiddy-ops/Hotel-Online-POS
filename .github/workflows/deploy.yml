@@ -2,21 +2,24 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ]   # adjust if your default branch is different
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mybidhaa-dv --password-stdin
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/mybidhaa-dev/frontend:latest .
+        run: docker build -t ghcr.io/mybidhaa-dv/loho_partner_publisher_portal:latest .
 
-      - name: Push to registry
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker push ghcr.io/mybidhaa-dev/frontend:latest
+      - name: Push Docker image
+        run: docker push ghcr.io/mybidhaa-dv/loho_partner_publisher_portal:latest
 
       - name: Deploy to droplet
         uses: appleboy/ssh-action@v0.1.10
@@ -25,5 +28,8 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
+            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mybidhaa-dv --password-stdin
+            cd /app/portal-deployment
+            git pull origin main
             docker compose pull frontend
             docker compose up -d frontend
