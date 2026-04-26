@@ -24,19 +24,19 @@ function DashboardShell({ sidebar, title }: { sidebar: React.ReactNode; title: s
 }
 
 export function PublisherPrivateRoutes() {
-  const isAuthenticated = sessionStorage.getItem("loho-auth") === "true";
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  const token = sessionStorage.getItem("loho-token");
+  if (!token) return <Navigate to="/" replace />;
   return <DashboardShell sidebar={<PublisherSidebar />} title="Publisher Dashboard" />;
 }
 
 export function PartnerPrivateRoutes() {
-  const isAuthenticated = sessionStorage.getItem("loho-auth") === "true";
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  const token = sessionStorage.getItem("loho-token");
+  if (!token) return <Navigate to="/" replace />;
   return <DashboardShell sidebar={<PartnerSidebar />} title="Partner Dashboard" />;
 }
 
 export function AdminPrivateRoutes() {
-  const isAuthenticated = sessionStorage.getItem("loho-auth") === "true";
-  if (!isAuthenticated) return <Navigate to="/admin-login" replace />;
+  const token = sessionStorage.getItem("loho-token");
+  if (!token) return <Navigate to="/admin-login" replace />;
   return <DashboardShell sidebar={<AdminSidebar />} title="Admin Dashboard" />;
 }

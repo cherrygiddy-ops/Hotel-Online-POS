@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { PublisherPrivateRoutes, PartnerPrivateRoutes, AdminPrivateRoutes } from "./PrivateRoutes";
 import ErrorPage from "@/pages/ErrorPage";
 import Login from "@/pages/Login";
 import AdminLogin from "@/pages/AdminLogin";
@@ -17,6 +16,7 @@ import AdminRevenueView from "@/pages/admin/AdminRevenue";
 import AdminContentView from "@/pages/admin/AdminContent";
 import AdminPublishers from "@/pages/admin/AdminPublishers";
 import AdminUsage from "@/pages/admin/AdminUsage";
+import { PublisherPrivateRoutes, PartnerPrivateRoutes, AdminPrivateRoutes } from "./PrivateRoutes";
 
 const router = createBrowserRouter([
   {
