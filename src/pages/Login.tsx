@@ -35,6 +35,7 @@ export default function Login() {
 
       // Save JWT token + role
       sessionStorage.setItem("loho-role", "publisher");
+      sessionStorage.setItem("loho-token", result.token);
 
       // Navigate directly to publisher dashboard
       navigate("/publisher");
