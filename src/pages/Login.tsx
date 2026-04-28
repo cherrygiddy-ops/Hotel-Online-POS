@@ -4,7 +4,7 @@ import { BarChart3, Handshake, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import useLogin from "@/hooks/useLogin";
+// import useLogin from "@/hooks/useLogin"; // disabled for now
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,7 @@ type LoginData = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
-  const login = useLogin();
+  // const login = useLogin(); // disabled for now
 
   const {
     register,
@@ -26,23 +26,14 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
 
+  // Stubbed login handler
   const onSubmit = async (data: LoginData) => {
-    try {
-      const result = await login.mutateAsync({
-        email: data.email,
-        password: data.password
-      });
+    // Fake token + role
+    sessionStorage.setItem("loho-role", "publisher");
+    sessionStorage.setItem("loho-token", "demo-publisher-token");
 
-      // Save JWT token + role
-      sessionStorage.setItem("loho-role", "publisher");
-      sessionStorage.setItem("loho-token", result.token);
-
-      // Navigate directly to publisher dashboard
-      navigate("/publisher");
-    } catch (err) {
-      console.error(err);
-      alert("Login failed. Please check credentials.");
-    }
+    // Navigate directly to publisher dashboard
+    navigate("/publisher");
   };
 
   return (
@@ -119,7 +110,6 @@ export default function Login() {
               Sign In
             </Button>
           </form>
-
         </motion.div>
       </div>
     </div>

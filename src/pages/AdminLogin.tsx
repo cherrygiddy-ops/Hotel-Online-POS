@@ -1,21 +1,49 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BarChart3, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import useLogin from "@/hooks/useLogin"; // same hook you use for publisher login
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "Provide a valid email" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const login = useLogin();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    sessionStorage.setItem("loho-auth", "true");
-    sessionStorage.setItem("loho-role", "admin");
-    navigate("/admin");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
+
+  const onSubmit = async (data: LoginData) => {
+    try {
+      const result = await login.mutateAsync({
+        email: data.email,
+        password: data.password
+      });
+
+      // Save JWT token + role
+      sessionStorage.setItem("loho-token", result.token);
+      sessionStorage.setItem("loho-role", "admin");
+
+      // Navigate directly to admin dashboard
+      navigate("/admin");
+    } catch (err) {
+      console.error(err);
+      alert("Admin login failed. Please check credentials.");
+    }
   };
 
   return (
@@ -72,57 +100,24 @@ export default function AdminLogin() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="w-full max-w-md"
         >
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="gradient-primary rounded-xl p-3">
-              <BarChart3 className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold font-display">LoHo</h1>
-          </div>
-
-          <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="text-xs font-medium uppercase tracking-wider text-primary">Admin Portal</span>
-          </div>
           <h2 className="text-2xl font-bold font-display text-foreground">Welcome back, Admin</h2>
           <p className="mt-1 text-muted-foreground">Sign in to manage the platform</p>
 
-          <form onSubmit={handleLogin} className="mt-8 space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@loho.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-              />
+              <Input id="email" type="email" placeholder="admin@loho.com" {...register("email")} className="h-11" />
+              {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11"
-              />
+              <Input id="password" type="password" placeholder="••••••••" {...register("password")} className="h-11" />
+              {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
             </div>
             <Button type="submit" className="w-full h-11 gradient-primary text-primary-foreground font-medium border-0">
               Sign In
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Demo mode — click Sign In with any credentials
-          </p>
-          <p className="mt-3 text-center text-sm text-muted-foreground">
-            Partner or Publisher?{" "}
-            <Link to="/" className="text-primary font-medium hover:underline">
-              Sign in here
-            </Link>
-          </p>
         </motion.div>
       </div>
     </div>
