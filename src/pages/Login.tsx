@@ -122,7 +122,7 @@ export default function Login() {
 
           {/* Simple link to Admin Login */}
           <div className="mt-4 text-center">
-            <Link to="/admin" className="text-sm text-accent hover:underline">
+            <Link to="/admin-login" className="text-sm text-accent hover:underline">
               Go to Admin Login
             </Link>
           </div>
