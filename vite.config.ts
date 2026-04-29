@@ -5,11 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8081,
-    hmr: {
-      overlay: false,
-    },
     proxy: {
       // Forward API requests to backend
        "/auth": {
