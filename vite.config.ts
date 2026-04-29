@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       // Forward API requests to backend
-       "/auth": {
+       "/auth/login": {
         target: "http://178.62.225.206:3001", // proxy auth endpoints too
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/auth/, "/auth"),
