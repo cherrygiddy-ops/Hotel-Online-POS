@@ -3,8 +3,7 @@ import { useAuthStore } from "../components/Store/AuthStore";
 import { MonthlyRevenue } from "@/entities/MonthlyRevenue";
 console.log("url:"+import.meta.env.VITE_API_BASE_URL)
  export const axiosInstance = axios.create({
-   baseURL: import.meta.env.VITE_API_BASE_URL,
-   withCredentials: true,
+   baseURL: import.meta.env.VITE_API_BASE_URL
  });
 
 axiosInstance.interceptors.request.use(
