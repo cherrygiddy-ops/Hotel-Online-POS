@@ -30,14 +30,14 @@ export default function Login() {
     try {
       const result = await login.mutateAsync({
         email: data.email,
-        password: data.password
+        password: data.password,
       });
 
       // Save JWT token + role
-      sessionStorage.setItem("loho-role", "publisher");
       sessionStorage.setItem("loho-token", result.token);
+      sessionStorage.setItem("loho-role", "publisher");
 
-      // Navigate directly to publisher dashboard
+      // Always redirect to publisher dashboard
       navigate("/publisher");
     } catch (err) {
       console.error(err);
@@ -120,6 +120,12 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* Simple link to Admin Login */}
+          <div className="mt-4 text-center">
+            <Link to="/admin" className="text-sm text-accent hover:underline">
+              Go to Admin Login
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>
