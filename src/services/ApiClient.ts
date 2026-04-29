@@ -1,10 +1,11 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "../components/Store/AuthStore";
 import { MonthlyRevenue } from "@/entities/MonthlyRevenue";
-console.log("url:"+import.meta.env.VITE_API_BASE_URL)
- export const axiosInstance = axios.create({
-   baseURL: import.meta.env.VITE_API_BASE_URL
- });
+console.log("url:http://178.62.225.206:3001");
+
+export const axiosInstance = axios.create({
+  baseURL: "http://178.62.225.206:3001"
+});
 
 axiosInstance.interceptors.request.use(
   (config) => {
