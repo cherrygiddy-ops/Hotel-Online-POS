@@ -6,11 +6,11 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
-      // Forward API requests to backend
-       "/auth/login": {
-        target: "http://178.62.225.206:3001", // proxy auth endpoints too
+      // Forward all API requests to backend
+      "/api": {
+        target: "http://localhost:8080", // backend running locally in dev
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/auth/, "/auth"),
+        rewrite: (path) => path.replace(/^\/api/, ""), // strip /api before forwarding
       },
     },
   },
