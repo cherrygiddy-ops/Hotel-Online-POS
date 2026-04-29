@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "../components/Store/AuthStore";
+import { MonthlyRevenue } from "@/entities/MonthlyRevenue";
 console.log("url:"+import.meta.env.VITE_API_BASE_URL)
  export const axiosInstance = axios.create({
    baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -109,6 +110,17 @@ class APICLIENT<TRequest, TResponse> {
       .then((res) => res.data);
   };
 
+  getStats = () => {
+  return axiosInstance
+    .get<TResponse>(this.endpoint)
+    .then((res) => res.data);
+};
+
+  getMonthlyRevenue = () => {
+    return axiosInstance
+      .get<MonthlyRevenue[]>(this.endpoint)
+      .then((res) => res.data);
+  };
 }
 
 export default APICLIENT;
