@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { PublisherSidebar } from "@/components/PublisherSidebar";
-import { PartnerSidebar } from "@/components/PartnerSidebar";
-import { AdminSidebar } from "@/components/AdminSidebar";
+import { PublisherSidebar } from "@/components/publisher/PublisherSidebar";
+import { PartnerSidebar } from "@/components/partner/PartnerSidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { useAuthStore } from "@/components/Store/AuthStore";
 
 function DashboardShell({ sidebar, title }: { sidebar: React.ReactNode; title: string }) {
   return (
@@ -24,19 +25,19 @@ function DashboardShell({ sidebar, title }: { sidebar: React.ReactNode; title: s
 }
 
 export function PublisherPrivateRoutes() {
-  const token = sessionStorage.getItem("loho-token");
-  if (!token) return <Navigate to="/" replace />;
+  const accessToken = useAuthStore(state => state.accessToken);
+  if (!accessToken) return <Navigate to="/" replace />;
   return <DashboardShell sidebar={<PublisherSidebar />} title="Publisher Dashboard" />;
 }
 
 export function PartnerPrivateRoutes() {
-  const token = sessionStorage.getItem("loho-token");
-  if (!token) return <Navigate to="/" replace />;
+  const accessToken = useAuthStore(state => state.accessToken);
+  if (!accessToken) return <Navigate to="/" replace />;
   return <DashboardShell sidebar={<PartnerSidebar />} title="Partner Dashboard" />;
 }
 
 export function AdminPrivateRoutes() {
-  const token = sessionStorage.getItem("loho-token");
-  if (!token) return <Navigate to="/admin-login" replace />;
+  const accessToken = useAuthStore(state => state.accessToken);
+  if (!accessToken) return <Navigate to="/" replace />;
   return <DashboardShell sidebar={<AdminSidebar />} title="Admin Dashboard" />;
 }

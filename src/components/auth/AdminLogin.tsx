@@ -28,22 +28,23 @@ export default function AdminLogin() {
   } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = async (data: LoginData) => {
-    try {
-      const result = await login.mutateAsync({
-        email: data.email,
-        password: data.password
-      });
+    // try {
+    //   const result = await login.mutateAsync({
+    //     email: data.email,
+    //     password: data.password
+    //   });
 
-      // Save JWT token + role
-      sessionStorage.setItem("loho-token", result.token);
-      sessionStorage.setItem("loho-role", "admin");
+    //   // Save JWT token + role
+    //   sessionStorage.setItem("loho-token", result.token);
+    //   sessionStorage.setItem("loho-role", "admin");
 
-      // Navigate directly to admin dashboard
-      navigate("/admin");
-    } catch (err) {
-      console.error(err);
-      alert("Admin login failed. Please check credentials.");
-    }
+    //   // Navigate directly to admin dashboard
+    //   navigate("/admin");
+    // } catch (err) {
+    //   console.error(err);
+    //   alert("Admin login failed. Please check credentials.");
+    // }
+     navigate("/admin");
   };
 
   return (
@@ -114,7 +115,7 @@ export default function AdminLogin() {
               <Input id="password" type="password" placeholder="••••••••" {...register("password")} className="h-11" />
               {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full h-11 gradient-primary text-primary-foreground font-medium border-0">
+            <Button  className="w-full h-11 gradient-primary text-primary-foreground font-medium border-0">
               Sign In
             </Button>
           </form>
