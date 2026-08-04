@@ -24,9 +24,9 @@ jobs:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VPS_IP }}          # VPS IP
-          username: ${{ secrets.VPS_USER }}    # usually 'root' or a deploy user
-          key: ${{ secrets.VPS_SSH_KEY }}      # private key stored in GitHub secrets
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
 
@@ -40,11 +40,11 @@ jobs:
             fi
 
             # Ensure deployment repo exists
-            if [ ! -d "/app/hotel_online_pos" ]; then
-              git clone https://github.com/cherrygiddy-ops/Hotel-POS-Deployment.git /app/hotel_online_pos
+            if [ ! -d "/app/hotelpos-deployment" ]; then
+              git clone https://github.com/cherrygiddy-ops/Hotel-POS-Deployment.git /app/hotelpos-deployment
             fi
 
-            cd /app/hotel_online_pos
+            cd /app/hotelpos-deployment
             git pull origin main
 
             # Pull and redeploy all services
