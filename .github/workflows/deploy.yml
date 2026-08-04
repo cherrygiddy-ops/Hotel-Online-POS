@@ -30,15 +30,6 @@ jobs:
           script: |
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
 
-            # Ensure dependencies
-            if ! command -v git >/dev/null; then
-              sudo yum install -y git || sudo dnf install -y git
-            fi
-            if ! command -v docker-compose >/dev/null; then
-              sudo curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
-
             # Ensure deployment repo exists
             if [ ! -d "/app/hotelpos-deployment" ]; then
               git clone https://github.com/cherrygiddy-ops/Hotel-POS-Deployment.git /app/hotelpos-deployment
