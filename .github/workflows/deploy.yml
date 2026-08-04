@@ -1,8 +1,8 @@
-name: Deploy POS System
+name: Deploy POS Frontend
 
 on:
   push:
-    branches: [ "main" ]   
+    branches: [ "main" ]   # adjust if your default branch is different
 
 jobs:
   build:
@@ -38,6 +38,9 @@ jobs:
             cd /app/hotelpos-deployment
             git pull origin main
 
-            # Pull and redeploy all services
-            docker-compose pull
-            docker-compose up -d
+            # Pull and redeploy only the frontend container
+            docker compose pull frontend
+            docker compose up -d frontend
+
+            # Show container status
+            docker compose ps
