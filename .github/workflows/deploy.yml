@@ -1,4 +1,4 @@
-name: Deploy Frontend
+name: Deploy POS System
 
 on:
   push:
@@ -15,21 +15,39 @@ jobs:
       - name: Log in to GHCR
         run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
 
-      - name: Build Docker image
+      - name: Build Frontend Docker image
         run: docker build -t ghcr.io/cherrygiddy-ops/hotelpos_frontend:latest .
 
-      - name: Push Docker image
+      - name: Push Frontend Docker image
         run: docker push ghcr.io/cherrygiddy-ops/hotelpos_frontend:latest
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VPS_IP }}          # Truehost VPS IP
+          host: ${{ secrets.VPS_IP }}          # VPS IP
           username: ${{ secrets.VPS_USER }}    # usually 'root' or a deploy user
           key: ${{ secrets.VPS_SSH_KEY }}      # private key stored in GitHub secrets
           script: |
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
-            cd /app/hotelpos-deployment
+
+            # Ensure dependencies
+            if ! command -v git >/dev/null; then
+              sudo yum install -y git || sudo dnf install -y git
+            fi
+            if ! command -v docker-compose >/dev/null; then
+              sudo curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+            # Ensure repo exists
+            if [ ! -d "/app/hotel_online_pos" ]; then
+              git clone https://github.com/cherrygiddy-ops/Hotel-Online-POS.git /app/hotel_online_pos
+            fi
+
+            cd /app/hotel_online_pos
             git pull origin main
-            docker compose pull frontend
-            docker compose up -d frontend
+
+            # Pull and redeploy all services
+            docker-compose pull
+            docker-compose up -d
+
