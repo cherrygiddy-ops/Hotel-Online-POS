@@ -13,23 +13,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to GHCR
-        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mybidhaa-dv --password-stdin
+        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/mybidhaa-dv/loho_partner_publisher_portal:latest .
+        run: docker build -t ghcr.io/cherrygiddy-ops/hotelpos_frontend:latest .
 
       - name: Push Docker image
-        run: docker push ghcr.io/mybidhaa-dv/loho_partner_publisher_portal:latest
+        run: docker push ghcr.io/cherrygiddy-ops/hotelpos_frontend:latest
 
-      - name: Deploy to droplet
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
+          host: ${{ secrets.VPS_IP }}          # Truehost VPS IP
+          username: ${{ secrets.VPS_USER }}    # usually 'root' or a deploy user
+          key: ${{ secrets.VPS_SSH_KEY }}      # private key stored in GitHub secrets
           script: |
-            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mybidhaa-dv --password-stdin
-            cd /app/portal-deployment
+            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
+            cd /app/hotelpos-deployment
             git pull origin main
             docker compose pull frontend
             docker compose up -d frontend

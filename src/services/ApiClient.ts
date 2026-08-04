@@ -1,6 +1,6 @@
 import axios, { type AxiosRequestConfig } from "axios";
-import { useAuthStore } from "../components/Store/AuthStore";
-import { MonthlyRevenue } from "@/entities/MonthlyRevenue";
+import { OrderSummaryDto } from "@/entities/OrderSummaryDto";
+import { useAuthStore } from "@/Store/AuthStore";
 console.log("url:"+import.meta.env.VITE_API_BASE_URL)
  export const axiosInstance = axios.create({
    baseURL: import.meta.env.VITE_API_BASE_URL
@@ -115,10 +115,42 @@ class APICLIENT<TRequest, TResponse> {
     .then((res) => res.data);
 };
 
-  getMonthlyRevenue = () => {
+   addToCart = (cartId: string, productId: string): Promise<TResponse> => {
     return axiosInstance
-      .get<MonthlyRevenue[]>(this.endpoint)
+      .post<TResponse>(`${this.endpoint}/${cartId}/items`, { productId })
       .then((res) => res.data);
+  };
+  createCart = () => {
+    return axiosInstance.post<TResponse>(this.endpoint).then((res) => res.data);
+  };
+  updateCartItem = (cartId: string, productId: string, quantity: number) => {
+    return axiosInstance
+      .put<TResponse>(`${this.endpoint}/${cartId}/items/${productId}`, {
+        quantity,
+      })
+      .then((res) => res.data);
+  };
+
+  deleteCartItem = (cartId: string, productId: string) => {
+    return axiosInstance
+      .delete(`${this.endpoint}/${cartId}/items/${productId}`)
+      .then((res) => res.data);
+  };
+
+    getAllOrders = () => {
+    return axiosInstance
+      .get<TResponse[]>(this.endpoint)
+      .then((res) => res.data);
+  };
+
+  markOrderAsPaid = async (orderId: number) => {
+    const res = await axiosInstance.put(`/auth/checkout/${orderId}/status/paid`);
+    return res.data;
+  };
+  
+  getOrderSummary = async (): Promise<OrderSummaryDto> => {
+    const res = await axiosInstance.get("/auth/orders/summary");
+    return res.data;
   };
 }
 

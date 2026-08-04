@@ -4,9 +4,9 @@ import { useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import type { AxiosError } from "axios";
 import type User from "../entities/UserContext";
-import { useAuthStore } from "../components/Store/AuthStore";
 import { axiosInstance } from "../services/ApiClient";
 import LoginService from "../services/LoginService";
+import { useAuthStore } from "@/Store/AuthStore";
 
 
 const useLogin = () => {

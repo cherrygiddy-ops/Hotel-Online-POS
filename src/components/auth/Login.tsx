@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useAuthStore } from "@/Store/AuthStore";
+
 
 const loginSchema = z.object({
   username: z.string().min(3, { message: "Provide a valid username" }),
@@ -30,23 +32,36 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = async (data: LoginData) => {
-    try {
-      const result = await login.mutateAsync({
-        email: data.username,
-        password: data.password,
-      });
 
-      if (result.token === "admin") {
-        navigate("/adminHome");
-      } else {
-        navigate("/adminHome");
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Login failed. Please check your credentials.");
+
+const onSubmit = async (data: LoginData) => {
+  try {
+    await login.mutateAsync({
+      email: data.username,
+      password: data.password,
+    });
+
+    const { user } = useAuthStore.getState();
+
+    if (!user) {
+      setErrorMessage("Login failed. No user info found.");
+      return;
     }
-  };
+
+    if (user.role === "ADMIN") {
+      navigate("/adminHome"); // cashier dashboard
+    } else if (user.role === "WAITER") {
+      navigate("/waiter"); // waiter dashboard
+    } else {
+      navigate("/"); // fallback
+    }
+  } catch (err) {
+    console.error(err);
+    setErrorMessage("Login failed. Please check your credentials.");
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex">
@@ -162,3 +177,5 @@ export default function Login() {
     </div>
   );
 }
+
+

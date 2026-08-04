@@ -21,13 +21,10 @@ import {
 } from "lucide-react";
 
 const publisherLinks = [
-  { title: "Dashboard", url: "/publisher", icon: LayoutDashboard },
-  { title: "Content Analytics", url: "/contentAnalytics", icon: BookOpen },
-  { title: "Revenue Breakdown", url: "/revenueBreakdown", icon: TrendingUp },
-  { title: "Receipts", url: "/receipts", icon: Receipt },
+  { title: "Dashboard", url: "/waiter", icon: LayoutDashboard },
 ];
 
-export function PublisherSidebar() {
+export function WaiterSideBar() {
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -48,13 +45,13 @@ export function PublisherSidebar() {
           </div>
           <div>
             <h1 className="font-heading text-base font-semibold text-sidebar-accent-foreground">LoHo</h1>
-            <p className="text-xs text-sidebar-foreground">Publisher Portal</p>
+            <p className="text-xs text-sidebar-foreground">Waiter Dashboard</p>
           </div>
         </div>
       </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Publisher Panel</SidebarGroupLabel>
+          <SidebarGroupLabel>Waiter Panel</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {publisherLinks.map((item) => (
@@ -82,13 +79,13 @@ export function PublisherSidebar() {
               <div className="p-4 border-t border-sidebar-border">
                 <div className="flex items-center gap-3 px-3 py-2">
                   <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center text-sm font-semibold text-sidebar-primary">
-                    TE
+                    ST
                   </div>
                   <div>
                     <p className="text-sm font-medium text-sidebar-accent-foreground">
-                      TechEd Publishing
+                      Steak House Hotel POS
                     </p>
-                    <p className="text-xs text-sidebar-foreground">Publisher</p>
+                    {/* <p className="text-xs text-sidebar-foreground">Waiter</p> */}
                   </div>
                 </div>
               </div>

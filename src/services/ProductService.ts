@@ -13,12 +13,12 @@ export default class ProductService {
     return res.data;
   }
 
-  static async update(id: number, payload: Partial<Product>): Promise<Product> {
+  static async update(id: string, payload: Partial<Product>): Promise<Product> {
     const res = await axiosInstance.put<Product>(`/auth/products/${id}`, payload);
     return res.data;
   }
 
-  static async delete(id: number): Promise<void> {
+  static async delete(id: string): Promise<void> {
     await axiosInstance.delete(`/auth/products/${id}`);
   }
 }

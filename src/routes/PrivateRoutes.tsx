@@ -1,9 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { PublisherSidebar } from "@/components/publisher/PublisherSidebar";
-import { PartnerSidebar } from "@/components/partner/PartnerSidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { useAuthStore } from "@/components/Store/AuthStore";
+import { useAuthStore } from "@/Store/AuthStore";
+import { WaiterSideBar } from "@/components/Waiter/WaiterSideBar";
 
 function DashboardShell({ sidebar, title }: { sidebar: React.ReactNode; title: string }) {
   return (
@@ -24,18 +23,12 @@ function DashboardShell({ sidebar, title }: { sidebar: React.ReactNode; title: s
   );
 }
 
-export function PublisherPrivateRoutes() {
+
+export function WaiterPrivateRoutes() {
   const accessToken = useAuthStore(state => state.accessToken);
   if (!accessToken) return <Navigate to="/" replace />;
-  return <DashboardShell sidebar={<PublisherSidebar />} title="Publisher Dashboard" />;
+  return <DashboardShell sidebar={<WaiterSideBar />} title="Waiter Dashboard" />;
 }
-
-export function PartnerPrivateRoutes() {
-  const accessToken = useAuthStore(state => state.accessToken);
-  if (!accessToken) return <Navigate to="/" replace />;
-  return <DashboardShell sidebar={<PartnerSidebar />} title="Partner Dashboard" />;
-}
-
 export function AdminPrivateRoutes() {
   const accessToken = useAuthStore(state => state.accessToken);
   if (!accessToken) return <Navigate to="/" replace />;

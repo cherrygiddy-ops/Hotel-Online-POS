@@ -1,7 +1,8 @@
+import User from "@/entities/UserContext";
+import { axiosInstance } from "@/services/ApiClient";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type User from "../../entities/UserContext";
-import { axiosInstance } from "../../services/ApiClient";
+
 
 
 interface AuthState {

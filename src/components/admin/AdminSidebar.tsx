@@ -45,7 +45,7 @@ export function AdminSidebar() {
   const handleLogout = () => {
     sessionStorage.removeItem("loho-auth");
     sessionStorage.removeItem("loho-role");
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -58,7 +58,7 @@ export function AdminSidebar() {
             </div>
             {!collapsed && (
               <span className="text-lg font-bold font-display text-sidebar-foreground">
-                Hotel POS
+                Steak Hotel POS
               </span>
             )}
           </div>

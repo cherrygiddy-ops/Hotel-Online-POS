@@ -40,7 +40,7 @@ export const useProducts = () => {
   });
 
   // Update product
-  const updateProduct = useMutation<Product, AxiosError, { id: number; payload: Partial<Product> }>({
+  const updateProduct = useMutation<Product, AxiosError, { id: string; payload: Partial<Product> }>({
     mutationFn: ({ id, payload }) => ProductService.update(id, payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -64,7 +64,7 @@ export const useProducts = () => {
   });
 
   // Delete product
-  const deleteProduct = useMutation<void, AxiosError, number>({
+  const deleteProduct = useMutation<void, AxiosError, string>({
     mutationFn: ProductService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
