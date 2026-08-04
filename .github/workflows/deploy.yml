@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout application code
         uses: actions/checkout@v4
 
       - name: Log in to GHCR
@@ -39,9 +39,9 @@ jobs:
               sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            # Ensure repo exists
+            # Ensure deployment repo exists
             if [ ! -d "/app/hotel_online_pos" ]; then
-              git clone https://github.com/cherrygiddy-ops/Hotel-Online-POS.git /app/hotel_online_pos
+              git clone https://github.com/cherrygiddy-ops/Hotel-POS-Deployment.git /app/hotel_online_pos
             fi
 
             cd /app/hotel_online_pos
@@ -50,4 +50,3 @@ jobs:
             # Pull and redeploy all services
             docker-compose pull
             docker-compose up -d
-
