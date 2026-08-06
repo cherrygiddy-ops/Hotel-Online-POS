@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -118,5 +122,31 @@
   }
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm rounded-xl border border-border;
+  }
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide everything except receipt */
+  body * {
+    visibility: hidden;
+  }
+
+  #receipt, #receipt * {
+    visibility: visible;
+  }
+
+  #receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;   /* match thermal paper width */
+    font-size: 12px;
+    line-height: 1.4;
+    font-family: 'Inter', sans-serif; /* optional, matches your UI font */
   }
 }

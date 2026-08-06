@@ -7,7 +7,7 @@ import useDeleteCartItem from "@/hooks/useDeleteCartItem";
 import { useState } from "react";
 import { Product } from "@/entities/Product";
 import useAddToCart from "@/hooks/useAddToCart";
-import useCheckout from "@/hooks/useCheckout"; // ✅ import checkout hook
+import useCheckout from "@/hooks/useCheckout";
 import { useQueryClient } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
@@ -28,7 +28,7 @@ export default function WaiterDashboard() {
   const [search, setSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
 
-  const checkoutMutation = useCheckout(); // ✅ use checkout mutation
+  const checkoutMutation = useCheckout();
 
   if (productsQuery.isLoading || isLoading) return <p>Loading menu...</p>;
   if (productsQuery.error) return <p>Error loading products</p>;
@@ -46,34 +46,38 @@ export default function WaiterDashboard() {
 
   const handleCheckout = () => {
     if (!cart?.id) return;
-    // Show receipt modal after checkout
     setShowReceipt(true);
   };
-const printReceipt = () => {
-  if (!cart?.id) return;
 
-  // Optimistically clear items only, keep cartId persisted
-  useCartStore.getState().clearItems();
+  const printReceipt = () => {
+    if (!cart?.id) return;
 
-  // Also clear the checkout list in React Query cache
-  queryClient.setQueryData(["cartItems"], (old: any) => {
-    if (!old) return old;
-    return { ...old, items: [], totalPrice: 0 };
-  });
+    // Clear items optimistically
+    useCartStore.getState().clearItems();
+    queryClient.setQueryData(["cartItems"], (old: any) => {
+      if (!old) return old;
+      return { ...old, items: [], totalPrice: 0 };
+    });
 
-  checkoutMutation.mutate({
-    cartId: cart.id,
-    paymentMethod: "PayBill",
-    phoneNumber: "0712345678",
-  });
+    checkoutMutation.mutate({
+      cartId: cart.id,
+      paymentMethod: "PayBill",
+      phoneNumber: "0712345678",
+    });
 
-  setShowReceipt(false);
+    // Print only receipt block
+    const receipt = document.getElementById("receipt");
+    if (!receipt) return;
 
-  window.print();
+    const printContents = receipt.innerHTML;
+    const originalContents = document.body.innerHTML;
 
-  setShowReceipt(false);
-};
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
 
+    setShowReceipt(false);
+  };
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
@@ -148,7 +152,6 @@ const printReceipt = () => {
           <div className="bg-white border-t border-gray-300 p-6 h-64 shadow-lg flex flex-col w-full max-w-5xl">
             <h2 className="text-base font-bold mb-3">🛒 Checkout List</h2>
 
-            {/* Scrollable items list */}
             <div className="flex-1 overflow-y-auto space-y-3">
               {cart?.items?.length === 0 ? (
                 <p className="text-sm text-gray-500">No items yet</p>
@@ -194,7 +197,6 @@ const printReceipt = () => {
               )}
             </div>
 
-            {/* Footer pinned at bottom */}
             <div className="mt-3 flex justify-between items-center border-t border-gray-200 pt-3">
               <span className="text-sm font-semibold">
                 Total Items:{" "}
@@ -214,43 +216,41 @@ const printReceipt = () => {
           </div>
         </div>
 
-        {/* Receipt modal */}
+              {/* Receipt modal */}
         {showReceipt && cart && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded shadow-lg w-96">
-              {/* Header */}
-              <h2 className="text-xl font-bold mb-2 text-center">
-                🥩 Steak House Hotel
-              </h2>
-              <p className="text-xs text-center mb-4 text-gray-500">
-                Thank you for dining with us
-              </p>
+              <div id="receipt">
+                <h2 className="text-xl font-bold mb-2 text-center">
+                  🥩 Steak House Hotel
+                </h2>
+                <p className="text-xs text-center mb-4 text-gray-500">
+                  Thank you for dining with us
+                </p>
 
-              {/* Items */}
-              <div className="space-y-2">
-                {cart.items.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="flex justify-between text-sm"
-                  >
-                    <span>
-                      {item.product.name} x {item.quantity}
-                    </span>
-                    <span>Kes {item.totalprice}</span>
-                  </div>
-                ))}
+                <div className="space-y-2">
+                  {cart.items.map((item) => (
+                    <div
+                      key={item.product.id}
+                      className="flex justify-between text-sm"
+                    >
+                      <span>
+                        {item.product.name} x {item.quantity}
+                      </span>
+                      <span>Kes {item.totalprice}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 border-t pt-2 flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>Kes {cart.totalPrice}</span>
+                </div>
+
+                <p className="text-xs text-center mt-4 text-gray-500 italic">
+                  🌟 Welcome back again! 🌟
+                </p>
               </div>
-
-              {/* Total */}
-              <div className="mt-4 border-t pt-2 flex justify-between font-semibold">
-                <span>Total</span>
-                <span>Kes {cart.totalPrice}</span>
-              </div>
-
-              {/* Footer */}
-              <p className="text-xs text-center mt-4 text-gray-500 italic">
-                🌟 Welcome back again! 🌟
-              </p>
 
               {/* Actions */}
               <div className="mt-4 flex justify-end">
@@ -271,5 +271,3 @@ const printReceipt = () => {
     </div>
   );
 }
-
-
