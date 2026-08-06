@@ -271,3 +271,4 @@ const printReceipt = () => {
     </div>
   );
 }
+
