@@ -78,6 +78,7 @@ const printReceipt = () => {
 
 
 
+
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
   };
