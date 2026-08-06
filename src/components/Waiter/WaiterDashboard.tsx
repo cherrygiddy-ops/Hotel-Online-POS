@@ -49,35 +49,50 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-  const printReceipt = () => {
-    if (!cart?.id) return;
+const printReceipt = () => {
+  if (!cart?.id) return;
 
-    // Clear items optimistically
-    useCartStore.getState().clearItems();
-    queryClient.setQueryData(["cartItems"], (old: any) => {
-      if (!old) return old;
-      return { ...old, items: [], totalPrice: 0 };
-    });
+  // Clear items optimistically
+  useCartStore.getState().clearItems();
+  queryClient.setQueryData(["cartItems"], (old: any) => {
+    if (!old) return old;
+    return { ...old, items: [], totalPrice: 0 };
+  });
 
-    checkoutMutation.mutate({
-      cartId: cart.id,
-      paymentMethod: "PayBill",
-      phoneNumber: "0712345678",
-    });
+  checkoutMutation.mutate({
+    cartId: cart.id,
+    paymentMethod: "PayBill",
+    phoneNumber: "0712345678",
+  });
 
-    // Print only receipt block
-    const receipt = document.getElementById("receipt");
-    if (!receipt) return;
+  const receipt = document.getElementById("receipt");
+  if (!receipt) return;
 
-    const printContents = receipt.innerHTML;
-    const originalContents = document.body.innerHTML;
+  const printWindow = window.open("", "_blank", "width=400,height=600");
+  if (!printWindow) return;
 
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Receipt</title>
+        <style>
+          body { margin:0; padding:0; text-align:center; font-size:12px; line-height:1.4; }
+          #receipt { width:58mm; margin:0 auto; }
+          #receipt div { page-break-inside: avoid; }
+        </style>
+      </head>
+      <body>
+        ${receipt.innerHTML}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.close();
 
-    setShowReceipt(false);
-  };
+  setShowReceipt(false);
+};
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
@@ -217,56 +232,56 @@ export default function WaiterDashboard() {
         </div>
 
               {/* Receipt modal */}
-        {showReceipt && cart && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded shadow-lg w-96">
-              <div id="receipt">
-                <h2 className="text-xl font-bold mb-2 text-center">
-                  🥩 Steak House Hotel
-                </h2>
-                <p className="text-xs text-center mb-4 text-gray-500">
-                  Thank you for dining with us
-                </p>
+        {/* Receipt modal */}
+{showReceipt && cart && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded shadow-lg w-96">
+      <div id="receipt" className="text-center">
+        <h2 className="text-lg font-bold mb-2">
+          🥩 Steak House Hotel
+        </h2>
+        <p className="text-xs mb-4 text-gray-500">
+          Thank you for dining with us
+        </p>
 
-                <div className="space-y-2">
-                  {cart.items.map((item) => (
-                    <div
-                      key={item.product.id}
-                      className="flex justify-between text-sm"
-                    >
-                      <span>
-                        {item.product.name} x {item.quantity}
-                      </span>
-                      <span>Kes {item.totalprice}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 border-t pt-2 flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>Kes {cart.totalPrice}</span>
-                </div>
-
-                <p className="text-xs text-center mt-4 text-gray-500 italic">
-                  🌟 Welcome back again! 🌟
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-4 flex justify-end">
-                <Button
-                  className="bg-green-600 text-white hover:bg-green-700"
-                  onClick={printReceipt}
-                  disabled={checkoutMutation.isPending}
-                >
-                  {checkoutMutation.isPending
-                    ? "Processing..."
-                    : "Print Receipt"}
-                </Button>
-              </div>
+        <div className="space-y-1">
+          {cart.items.map((item) => (
+            <div
+              key={item.product.id}
+              className="text-sm"
+              style={{ pageBreakInside: "avoid" }}
+            >
+              {item.product.name} x {item.quantity} — Kes {item.totalprice}
             </div>
-          </div>
-        )}
+          ))}
+        </div>
+
+        <div
+          className="mt-2 font-semibold"
+          style={{ pageBreakInside: "avoid" }}
+        >
+          Total: Kes {cart.totalPrice}
+        </div>
+
+        <p className="text-xs mt-2 italic text-gray-500">
+          🌟 Welcome back again! 🌟
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-4 flex justify-center">
+        <Button
+          className="bg-green-600 text-white hover:bg-green-700"
+          onClick={printReceipt}
+          disabled={checkoutMutation.isPending}
+        >
+          {checkoutMutation.isPending ? "Processing..." : "Print Receipt"}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
       </main>
     </div>
   );
