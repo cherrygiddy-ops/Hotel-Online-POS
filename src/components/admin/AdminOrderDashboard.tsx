@@ -69,7 +69,7 @@ const printReceipt = () => {
 
   setShowReceipt(false);
 
-  window.print();
+  
 
   setShowReceipt(false);
 };
