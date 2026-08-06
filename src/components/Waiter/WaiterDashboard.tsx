@@ -68,31 +68,22 @@ const printReceipt = () => {
   const receipt = document.getElementById("receipt");
   if (!receipt) return;
 
-  const printWindow = window.open("", "_blank", "width=400,height=600");
-  if (!printWindow) return;
+  // Save current page content
+  const originalContents = document.body.innerHTML;
 
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Receipt</title>
-        <style>
-          body { margin:0; padding:0; text-align:center; font-size:12px; line-height:1.4; }
-          #receipt { width:58mm; margin:0 auto; }
-          #receipt div { page-break-inside: avoid; }
-        </style>
-      </head>
-      <body>
-        ${receipt.innerHTML}
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-  printWindow.close();
+  // Replace with receipt only
+  document.body.innerHTML = receipt.innerHTML;
 
+  // Trigger print
+  window.print();
+
+  // Restore original page
+  document.body.innerHTML = originalContents;
+
+  // Close modal
   setShowReceipt(false);
 };
+
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
