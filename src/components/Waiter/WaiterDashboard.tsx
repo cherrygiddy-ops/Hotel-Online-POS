@@ -65,24 +65,13 @@ const printReceipt = () => {
     phoneNumber: "0712345678",
   });
 
-  const receipt = document.getElementById("receipt");
-  if (!receipt) return;
-
-  // Save current page content
-  const originalContents = document.body.innerHTML;
-
-  // Replace with receipt only
-  document.body.innerHTML = receipt.innerHTML;
-
-  // Trigger print
+  // Just trigger print
   window.print();
 
-  // Restore original page
-  document.body.innerHTML = originalContents;
-
-  // Close modal
+  // Close modal after print
   setShowReceipt(false);
 };
+
 
 
   const handleAddToCart = (product: Product) => {

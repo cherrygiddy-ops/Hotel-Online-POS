@@ -126,27 +126,21 @@
 }
 
 @media print {
-  body {
-    margin: 0;
-    padding: 0;
-  }
-
-  /* Hide everything except receipt */
   body * {
     visibility: hidden;
   }
-
   #receipt, #receipt * {
     visibility: visible;
   }
-
   #receipt {
     position: absolute;
     left: 0;
     top: 0;
-    width: 58mm;   /* match thermal paper width */
+    width: 58mm;
+    margin: 0 auto;
+    text-align: center;
     font-size: 12px;
     line-height: 1.4;
-    font-family: 'Inter', sans-serif; /* optional, matches your UI font */
   }
+
 }
