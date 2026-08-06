@@ -65,12 +65,15 @@ const printReceipt = () => {
     phoneNumber: "0712345678",
   });
 
-  // Just trigger print
+  // Trigger print
   window.print();
 
-  // Close modal after print
-  setShowReceipt(false);
+  // Delay closing modal so print dialog can appear
+  setTimeout(() => {
+    setShowReceipt(false);
+  }, 1000);
 };
+
 
 
 
