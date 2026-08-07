@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useProducts } from "@/hooks/useProducts";
 import useUpdateCartItem from "@/hooks/useUpdateCartItem";
 import useDeleteCartItem from "@/hooks/useDeleteCartItem";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Product } from "@/entities/Product";
 import useAddToCart from "@/hooks/useAddToCart";
 import useCheckout from "@/hooks/useCheckout";
@@ -28,10 +28,12 @@ export default function WaiterDashboard() {
   const [search, setSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
 
+  const receiptRef = useRef<HTMLDivElement>(null);
+
   const checkoutMutation = useCheckout();
 
-  if (productsQuery.isLoading || isLoading) return <p>Loading menu...</p>;
-  if (productsQuery.error) return <p>Error loading products</p>;
+  if (productsQuery.isLoading || isLoading) return <div>Loading menu...</div>;
+  if (productsQuery.error) return <div>Error loading products</div>;
 
   // Group products by categoryId
   const grouped = productsQuery.data?.reduce(
@@ -49,35 +51,77 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-const printReceipt = () => {
-  if (!cart?.id) return;
+  const printReceipt = () => {
+    if (!cart?.id || !receiptRef.current) return;
 
-  // Clear items optimistically
-  useCartStore.getState().clearItems();
-  queryClient.setQueryData(["cartItems"], (old: any) => {
-    if (!old) return old;
-    return { ...old, items: [], totalPrice: 0 };
-  });
+    // Send checkout request
+    checkoutMutation.mutate({
+      cartId: cart.id,
+      paymentMethod: "PayBill",
+      phoneNumber: "0712345678",
+    });
 
-  checkoutMutation.mutate({
-    cartId: cart.id,
-    paymentMethod: "PayBill",
-    phoneNumber: "0712345678",
-  });
+    // Create thermal receipt print window
+    const printWindow = window.open("", "_blank", "width=320,height=700");
 
-  // Trigger print directly from the click event
-  window.print();
+    if (!printWindow) return;
 
-  // Close modal AFTER print dialog has opened
-  // Use a delay so the gesture context isn't lost
-  setTimeout(() => {
-    setShowReceipt(false);
-  }, 1500);
-};
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Receipt</title>
+          <style>
+            body {
+              width: 58mm;
+              margin: 0;
+              padding: 8px;
+              font-family: monospace;
+              font-size: 12px;
+              color: #000;
+            }
+            .center { text-align: center; }
+            .line { border-top: 1px dashed #000; margin: 6px 0; }
+            .row {
+              display: flex;
+              justify-content: space-between;
+              margin: 2px 0;
+            }
+            .total {
+              font-weight: bold;
+              font-size: 14px;
+            }
+            @media print {
+              body { width: 58mm; }
+            }
+          </style>
+        </head>
+        <body>
+          ${receiptRef.current.innerHTML}
+        </body>
+      </html>
+    `);
 
+    printWindow.document.close();
 
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
 
+      printWindow.onafterprint = () => {
+        printWindow.close();
 
+        // Clear cart after successful print dialog
+        useCartStore.getState().clearItems();
+
+        queryClient.setQueryData(["cartItems"], (old: any) => {
+          if (!old) return old;
+          return { ...old, items: [], totalPrice: 0 };
+        });
+
+        setShowReceipt(false);
+      };
+    };
+  };
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
@@ -99,9 +143,9 @@ const printReceipt = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      <main className="relative p-4 pb-28 bg-white w-full max-w-5xl">
-        <h1 className="text-xl font-bold mb-4">Hotel POS Menu</h1>
+    <div className="min-h-screen bg-gray-50 pb-72">
+      <main className="max-w-5xl mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">Hotel POS Menu</h1>
 
         {/* Search bar */}
         <Input
@@ -119,6 +163,7 @@ const printReceipt = () => {
               const filtered = items.filter((item) =>
                 item.name.toLowerCase().includes(search.toLowerCase()),
               );
+
               return filtered.length > 0 ? (
                 <motion.div
                   key={idx}
@@ -130,6 +175,7 @@ const printReceipt = () => {
                   <h2 className="text-lg font-semibold mb-3">
                     Category {category}
                   </h2>
+
                   <div className="flex flex-col gap-3">
                     {filtered.map((item) => (
                       <Button
@@ -162,6 +208,7 @@ const printReceipt = () => {
                     className="flex justify-between items-center text-sm bg-gray-100 rounded px-3 py-2"
                   >
                     <span className="font-medium">{item.product.name}</span>
+
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -172,7 +219,9 @@ const printReceipt = () => {
                       >
                         –
                       </Button>
+
                       <span className="font-bold">{item.quantity}</span>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -182,6 +231,7 @@ const printReceipt = () => {
                       >
                         +
                       </Button>
+
                       <Button
                         variant="destructive"
                         size="sm"
@@ -199,12 +249,13 @@ const printReceipt = () => {
 
             <div className="mt-3 flex justify-between items-center border-t border-gray-200 pt-3">
               <span className="text-sm font-semibold">
-                Total Items:{" "}
-                {cart?.items?.reduce((sum, i) => sum + i.quantity, 0)}
+                Total Items: {cart?.items?.reduce((sum, i) => sum + i.quantity, 0)}
               </span>
+
               <span className="text-sm font-semibold">
                 Total Amount: Kes {cart?.totalPrice ?? 0}
               </span>
+
               <Button
                 className="h-10 px-6 bg-green-600 text-white hover:bg-green-700"
                 onClick={handleCheckout}
@@ -216,59 +267,97 @@ const printReceipt = () => {
           </div>
         </div>
 
-              {/* Receipt modal */}
         {/* Receipt modal */}
-{showReceipt && cart && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white p-6 rounded shadow-lg w-96">
-      <div id="receipt" className="text-center">
-        <h2 className="text-lg font-bold mb-2">
-          🥩 Steak House Hotel
-        </h2>
-        <p className="text-xs mb-4 text-gray-500">
-          Thank you for dining with us
-        </p>
+        {showReceipt && cart && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-bold">HOTEL POS</h2>
+                <p className="text-sm text-gray-500">Receipt Preview</p>
+              </div>
 
-        <div className="space-y-1">
-          {cart.items.map((item) => (
-            <div
-              key={item.product.id}
-              className="text-sm"
-              style={{ pageBreakInside: "avoid" }}
-            >
-              {item.product.name} x {item.quantity} — Kes {item.totalprice}
+              <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3 bg-gray-50">
+                {cart.items.map((item) => (
+                  <div
+                    key={item.product.id}
+                    className="flex justify-between text-sm"
+                  >
+                    <span>
+                      {item.product.name} x {item.quantity}
+                    </span>
+                    <span>Kes {item.totalprice}</span>
+                  </div>
+                ))}
+
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>Kes {cart.totalPrice}</span>
+                </div>
+              </div>
+
+              <p className="text-xs mt-3 italic text-center text-gray-500">
+                🌟 Welcome back again! 🌟
+              </p>
+
+              <div className="mt-4 flex justify-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReceipt(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  className="bg-green-600 text-white hover:bg-green-700"
+                  onClick={printReceipt}
+                  disabled={checkoutMutation.isPending}
+                >
+                  {checkoutMutation.isPending ? "Processing..." : "Print Receipt"}
+                </Button>
+              </div>
             </div>
-          ))}
+          </div>
+        )}
+
+        {/* Hidden thermal receipt template */}
+        <div className="hidden">
+          <div ref={receiptRef}>
+            <div className="center">
+              <strong>HOTEL POS</strong>
+              <br />
+              Kapkatet, Kericho
+              <br />
+              Tel: 0712 345 678
+            </div>
+
+            <div className="line" />
+
+            {cart?.items?.map((item) => (
+              <div key={item.product.id} className="row">
+                <span>
+                  {item.product.name} x{item.quantity}
+                </span>
+                <span>{item.totalprice}</span>
+              </div>
+            ))}
+
+            <div className="line" />
+
+            <div className="row total">
+              <span>TOTAL</span>
+              <span>KES {cart?.totalPrice ?? 0}</span>
+            </div>
+
+            <div className="line" />
+
+            <div className="center">
+              Thank you!
+              <br />
+              Welcome again 🌟
+            </div>
+          </div>
         </div>
-
-        <div
-          className="mt-2 font-semibold"
-          style={{ pageBreakInside: "avoid" }}
-        >
-          Total: Kes {cart.totalPrice}
-        </div>
-
-        <p className="text-xs mt-2 italic text-gray-500">
-          🌟 Welcome back again! 🌟
-        </p>
-      </div>
-
-      {/* Actions */}
-      <div className="mt-4 flex justify-center">
-        <Button
-          className="bg-green-600 text-white hover:bg-green-700"
-          onClick={printReceipt}
-          disabled={checkoutMutation.isPending}
-        >
-          {checkoutMutation.isPending ? "Processing..." : "Print Receipt"}
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
-
       </main>
     </div>
   );
 }
-
