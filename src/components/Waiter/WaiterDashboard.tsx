@@ -4,13 +4,42 @@ import { Input } from "@/components/ui/input";
 import { useProducts } from "@/hooks/useProducts";
 import useUpdateCartItem from "@/hooks/useUpdateCartItem";
 import useDeleteCartItem from "@/hooks/useDeleteCartItem";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Product } from "@/entities/Product";
 import useAddToCart from "@/hooks/useAddToCart";
 import useCheckout from "@/hooks/useCheckout";
 import { useQueryClient } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
+
+const printStyles = `
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #thermal-receipt,
+  #thermal-receipt * {
+    visibility: visible;
+  }
+
+  #thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    color: black;
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+`;
 
 export default function WaiterDashboard() {
   const queryClient = useQueryClient();
@@ -19,6 +48,7 @@ export default function WaiterDashboard() {
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
+
   const {
     incrementItemCount,
     decrementItemCount,
@@ -28,12 +58,15 @@ export default function WaiterDashboard() {
   const [search, setSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
 
-  const receiptRef = useRef<HTMLDivElement>(null);
-
   const checkoutMutation = useCheckout();
 
-  if (productsQuery.isLoading || isLoading) return <div>Loading menu...</div>;
-  if (productsQuery.error) return <div>Error loading products</div>;
+  if (productsQuery.isLoading || isLoading) {
+    return <div className="p-4">Loading menu...</div>;
+  }
+
+  if (productsQuery.error) {
+    return <div className="p-4 text-red-600">Error loading products</div>;
+  }
 
   // Group products by categoryId
   const grouped = productsQuery.data?.reduce(
@@ -43,7 +76,7 @@ export default function WaiterDashboard() {
       acc[cat].push(product);
       return acc;
     },
-    {} as Record<string, typeof productsQuery.data>,
+    {} as Record<string, typeof productsQuery.data>
   );
 
   const handleCheckout = () => {
@@ -51,93 +84,33 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
- const printReceipt = () => {
-  if (!cart?.id) return;
+  const printReceipt = () => {
+    if (!cart?.id) return;
 
-  // Send checkout request
-  checkoutMutation.mutate({
-    cartId: cart.id,
-    paymentMethod: "PayBill",
-    phoneNumber: "0712345678",
-  });
+    // Send checkout request
+    checkoutMutation.mutate({
+      cartId: cart.id,
+      paymentMethod: "PayBill",
+      phoneNumber: "0712345678",
+    });
 
-  const itemsHtml = cart.items
-    .map(
-      (item) => `
-      <div style="display:flex;justify-content:space-between;margin:4px 0;">
-        <span>${item.product.name} x${item.quantity}</span>
-        <span>KES ${item.totalprice}</span>
-      </div>
-    `,
-    )
-    .join("");
-
-  const receiptHtml = `
-    <div style="width:58mm;padding:8px;font-family:monospace;font-size:12px;color:#000;">
-      <div style="text-align:center;">
-        <div style="font-weight:bold;font-size:16px;">HOTEL POS</div>
-        Kapkatet, Kericho<br/>
-        Tel: 0712 345 678
-      </div>
-
-      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
-
-      ${itemsHtml}
-
-      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
-
-      <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:14px;">
-        <span>TOTAL</span>
-        <span>KES ${cart.totalPrice}</span>
-      </div>
-
-      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
-
-      <div style="text-align:center;">
-        Thank you!<br/>
-        Welcome again 🌟
-      </div>
-    </div>
-  `;
-
-  const printWindow = window.open("", "_blank");
-
-  if (!printWindow) return;
-
-  printWindow.document.open();
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Receipt</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      </head>
-      <body style="margin:0;padding:0;background:#fff;">
-        ${receiptHtml}
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-
-  // Important: delay a little on Android POS devices
-  setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
-
+    // Print current page (Android POS friendly)
     setTimeout(() => {
-      printWindow.close();
+      window.print();
 
-      // Clear cart
-      useCartStore.getState().clearItems();
+      // Clear cart after print dialog opens
+      setTimeout(() => {
+        useCartStore.getState().clearItems();
 
-      queryClient.setQueryData(["cartItems"], (old: any) => {
-        if (!old) return old;
-        return { ...old, items: [], totalPrice: 0 };
-      });
+        queryClient.setQueryData(["cartItems"], (old: any) => {
+          if (!old) return old;
+          return { ...old, items: [], totalPrice: 0 };
+        });
 
-      setShowReceipt(false);
-    }, 1000);
-  }, 500);
-};
+        setShowReceipt(false);
+      }, 1000);
+    }, 200);
+  };
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
@@ -160,6 +133,8 @@ export default function WaiterDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-72">
+      <style>{printStyles}</style>
+
       <main className="max-w-5xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Hotel POS Menu</h1>
 
@@ -177,7 +152,7 @@ export default function WaiterDashboard() {
           {grouped &&
             Object.entries(grouped).map(([category, items], idx) => {
               const filtered = items.filter((item) =>
-                item.name.toLowerCase().includes(search.toLowerCase()),
+                item.name.toLowerCase().includes(search.toLowerCase())
               );
 
               return filtered.length > 0 ? (
@@ -287,35 +262,46 @@ export default function WaiterDashboard() {
         {showReceipt && cart && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
             <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
-              <div className="text-center mb-4">
-                <h2 className="text-lg font-bold">HOTEL POS</h2>
-                <p className="text-sm text-gray-500">Receipt Preview</p>
-              </div>
 
-              <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3 bg-gray-50">
+              {/* This is the ONLY thing that will print */}
+              <div id="thermal-receipt">
+                <div className="text-center">
+                  <h2 className="font-bold text-lg">HOTEL POS</h2>
+                  <p>Kapkatet, Kericho</p>
+                  <p>Tel: 0712 345 678</p>
+                </div>
+
+                <hr className="my-2 border-dashed" />
+
                 {cart.items.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex justify-between text-sm"
+                    className="flex justify-between text-sm mb-1"
                   >
                     <span>
-                      {item.product.name} x {item.quantity}
+                      {item.product.name} x{item.quantity}
                     </span>
-                    <span>Kes {item.totalprice}</span>
+                    <span>KES {item.totalprice}</span>
                   </div>
                 ))}
 
-                <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>Kes {cart.totalPrice}</span>
+                <hr className="my-2 border-dashed" />
+
+                <div className="flex justify-between font-bold">
+                  <span>TOTAL</span>
+                  <span>KES {cart.totalPrice}</span>
+                </div>
+
+                <hr className="my-2 border-dashed" />
+
+                <div className="text-center text-xs mt-3">
+                  Thank you!<br />
+                  Welcome again 🌟
                 </div>
               </div>
 
-              <p className="text-xs mt-3 italic text-center text-gray-500">
-                🌟 Welcome back again! 🌟
-              </p>
-
-              <div className="mt-4 flex justify-center gap-3">
+              {/* Buttons - hidden during print */}
+              <div className="mt-4 flex justify-center gap-3 no-print">
                 <Button
                   variant="outline"
                   onClick={() => setShowReceipt(false)}
@@ -334,45 +320,6 @@ export default function WaiterDashboard() {
             </div>
           </div>
         )}
-
-        {/* Hidden thermal receipt template */}
-        <div className="hidden">
-          <div ref={receiptRef}>
-            <div className="center">
-              <strong>HOTEL POS</strong>
-              <br />
-              Kapkatet, Kericho
-              <br />
-              Tel: 0712 345 678
-            </div>
-
-            <div className="line" />
-
-            {cart?.items?.map((item) => (
-              <div key={item.product.id} className="row">
-                <span>
-                  {item.product.name} x{item.quantity}
-                </span>
-                <span>{item.totalprice}</span>
-              </div>
-            ))}
-
-            <div className="line" />
-
-            <div className="row total">
-              <span>TOTAL</span>
-              <span>KES {cart?.totalPrice ?? 0}</span>
-            </div>
-
-            <div className="line" />
-
-            <div className="center">
-              Thank you!
-              <br />
-              Welcome again 🌟
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
