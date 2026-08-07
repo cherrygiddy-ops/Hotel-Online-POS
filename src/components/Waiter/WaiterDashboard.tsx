@@ -51,77 +51,93 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-  const printReceipt = () => {
-    if (!cart?.id || !receiptRef.current) return;
+ const printReceipt = () => {
+  if (!cart?.id) return;
 
-    // Send checkout request
-    checkoutMutation.mutate({
-      cartId: cart.id,
-      paymentMethod: "PayBill",
-      phoneNumber: "0712345678",
-    });
+  // Send checkout request
+  checkoutMutation.mutate({
+    cartId: cart.id,
+    paymentMethod: "PayBill",
+    phoneNumber: "0712345678",
+  });
 
-    // Create thermal receipt print window
-    const printWindow = window.open("", "_blank", "width=320,height=700");
+  const itemsHtml = cart.items
+    .map(
+      (item) => `
+      <div style="display:flex;justify-content:space-between;margin:4px 0;">
+        <span>${item.product.name} x${item.quantity}</span>
+        <span>KES ${item.totalprice}</span>
+      </div>
+    `,
+    )
+    .join("");
 
-    if (!printWindow) return;
+  const receiptHtml = `
+    <div style="width:58mm;padding:8px;font-family:monospace;font-size:12px;color:#000;">
+      <div style="text-align:center;">
+        <div style="font-weight:bold;font-size:16px;">HOTEL POS</div>
+        Kapkatet, Kericho<br/>
+        Tel: 0712 345 678
+      </div>
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Receipt</title>
-          <style>
-            body {
-              width: 58mm;
-              margin: 0;
-              padding: 8px;
-              font-family: monospace;
-              font-size: 12px;
-              color: #000;
-            }
-            .center { text-align: center; }
-            .line { border-top: 1px dashed #000; margin: 6px 0; }
-            .row {
-              display: flex;
-              justify-content: space-between;
-              margin: 2px 0;
-            }
-            .total {
-              font-weight: bold;
-              font-size: 14px;
-            }
-            @media print {
-              body { width: 58mm; }
-            }
-          </style>
-        </head>
-        <body>
-          ${receiptRef.current.innerHTML}
-        </body>
-      </html>
-    `);
+      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
 
-    printWindow.document.close();
+      ${itemsHtml}
 
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
+      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
 
-      printWindow.onafterprint = () => {
-        printWindow.close();
+      <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:14px;">
+        <span>TOTAL</span>
+        <span>KES ${cart.totalPrice}</span>
+      </div>
 
-        // Clear cart after successful print dialog
-        useCartStore.getState().clearItems();
+      <div style="border-top:1px dashed #000;margin:8px 0;"></div>
 
-        queryClient.setQueryData(["cartItems"], (old: any) => {
-          if (!old) return old;
-          return { ...old, items: [], totalPrice: 0 };
-        });
+      <div style="text-align:center;">
+        Thank you!<br/>
+        Welcome again 🌟
+      </div>
+    </div>
+  `;
 
-        setShowReceipt(false);
-      };
-    };
-  };
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) return;
+
+  printWindow.document.open();
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Receipt</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      </head>
+      <body style="margin:0;padding:0;background:#fff;">
+        ${receiptHtml}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+
+  // Important: delay a little on Android POS devices
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+
+    setTimeout(() => {
+      printWindow.close();
+
+      // Clear cart
+      useCartStore.getState().clearItems();
+
+      queryClient.setQueryData(["cartItems"], (old: any) => {
+        if (!old) return old;
+        return { ...old, items: [], totalPrice: 0 };
+      });
+
+      setShowReceipt(false);
+    }, 1000);
+  }, 500);
+};
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
