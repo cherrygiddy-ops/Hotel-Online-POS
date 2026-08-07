@@ -85,42 +85,27 @@ export default function WaiterDashboard() {
   };
 
 const printReceipt = () => {
+
+  alert("Print button clicked");
+
   if (!cart) return;
 
   const receipt = `
 HOTEL POS
-Kapkatet, Kericho
-Tel: 0712 345 678
-----------------------------
 
-${cart.items
-  .map(
-    (item) =>
-      `${item.product.name} x${item.quantity}   KES ${item.totalprice}`
-  )
-  .join("\n")}
-
-----------------------------
 TOTAL: KES ${cart.totalPrice}
 
 Thank you!
-Welcome again 🌟
 `;
 
-  try {
-    const intentUrl =
-      `intent://print#Intent;` +
-      `action=android.intent.action.SEND;` +
-      `type=text/plain;` +
-      `S.text=${encodeURIComponent(receipt)};` +
-      `end`;
+  const intentUrl =
+    `intent://print#Intent;` +
+    `action=android.intent.action.SEND;` +
+    `type=text/plain;` +
+    `S.text=${encodeURIComponent(receipt)};` +
+    `end`;
 
-    window.location.href = intentUrl;
-
-  } catch (error) {
-    console.error("Printing failed:", error);
-    alert("Unable to start printer");
-  }
+  window.location.href = intentUrl;
 };
 
   const handleAddToCart = (product: Product) => {
