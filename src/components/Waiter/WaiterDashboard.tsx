@@ -84,33 +84,44 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-  const printReceipt = () => {
-    if (!cart?.id) return;
+const printReceipt = () => {
+  if (!cart) return;
 
-    // Send checkout request
-    checkoutMutation.mutate({
-      cartId: cart.id,
-      paymentMethod: "PayBill",
-      phoneNumber: "0712345678",
-    });
+  const receipt = `
+HOTEL POS
+Kapkatet, Kericho
+Tel: 0712 345 678
+----------------------------
 
-    // Print current page (Android POS friendly)
-    setTimeout(() => {
-      window.print();
+${cart.items
+  .map(
+    (item) =>
+      `${item.product.name} x${item.quantity}   KES ${item.totalprice}`
+  )
+  .join("\n")}
 
-      // Clear cart after print dialog opens
-      setTimeout(() => {
-        useCartStore.getState().clearItems();
+----------------------------
+TOTAL: KES ${cart.totalPrice}
 
-        queryClient.setQueryData(["cartItems"], (old: any) => {
-          if (!old) return old;
-          return { ...old, items: [], totalPrice: 0 };
-        });
+Thank you!
+Welcome again 🌟
+`;
 
-        setShowReceipt(false);
-      }, 1000);
-    }, 200);
-  };
+  try {
+    const intentUrl =
+      `intent://print#Intent;` +
+      `action=android.intent.action.SEND;` +
+      `type=text/plain;` +
+      `S.text=${encodeURIComponent(receipt)};` +
+      `end`;
+
+    window.location.href = intentUrl;
+
+  } catch (error) {
+    console.error("Printing failed:", error);
+    alert("Unable to start printer");
+  }
+};
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
