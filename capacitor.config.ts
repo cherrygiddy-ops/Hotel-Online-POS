@@ -1,8 +1,8 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.onlinepos',
-  appName: 'Online Hotel POS',
+  appId: 'com.onlinePos',
+  appName: 'Online POS',
   server: {
     url: 'https://steak.hotelpos.top/',
     cleartext: false
@@ -10,3 +10,4 @@ const config: CapacitorConfig = {
 };
 
 export default config;
+

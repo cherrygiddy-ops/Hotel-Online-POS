@@ -98,46 +98,38 @@ const PrinterBridge = registerPlugin<any>('PrinterBridge');
 
 
 const printReceipt = async () => {
+  if (!cart) return;
 
-    if (!cart) return;
-
-    const receipt = `
+  const receipt = `
 HOTEL POS
-----------------
+Kapkatet, Kericho
+Tel: 0712 345 678
+----------------------------
 
 ${cart.items
-.map(
-(item) =>
-`${item.product.name} x${item.quantity}   KES ${item.totalprice}`
-)
-.join('\n')}
+  .map(
+    (item) =>
+      `${item.product.name} x${item.quantity}   KES ${item.totalprice}`
+  )
+  .join('\n')}
 
-----------------
-
+----------------------------
 TOTAL: KES ${cart.totalPrice}
 
 Thank you!
 Welcome again!
-
-
 `;
 
-    try {
-
-        await PrinterBridge.printText({
-            text: receipt
-        });
-
-        console.log("Print sent");
-
-    } catch(error){
-
-        console.error("Printing error:", error);
-        alert("Printer error");
-
-    }
+  try {
+    // @ts-ignore
+    await window.PrinterBridge.printReceipt({
+      text: receipt,
+    });
+  } catch (error) {
+    console.error('Printing error:', error);
+    alert('Printing failed');
+  }
 };
-
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });

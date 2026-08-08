@@ -1,4 +1,4 @@
-package com.onlinepos;
+package com.onlinePos;
 
 import com.getcapacitor.BridgeActivity;
 
