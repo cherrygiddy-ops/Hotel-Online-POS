@@ -81,10 +81,7 @@ export default function WaiterDashboard() {
 
   // --------------------------------------------------
   // PRINT RECEIPT
-  // IMPORTANT:
-  // We DO NOT use window.print().
-  // We create a separate hidden iframe containing
-  // ONLY the receipt.
+  // ONLY THE RECEIPT IS SENT TO PRINT
   // --------------------------------------------------
 
   const printReceipt = () => {
@@ -94,7 +91,7 @@ export default function WaiterDashboard() {
     }
 
     try {
-      // Create a hidden iframe
+      // Create hidden iframe
       const iframe = document.createElement("iframe");
 
       iframe.style.position = "fixed";
@@ -117,30 +114,56 @@ export default function WaiterDashboard() {
       }
 
       // --------------------------------------------------
-      // RECEIPT HTML
-      // ONLY THIS CONTENT WILL BE PRINTED
+      // CALCULATE RECEIPT ITEMS
+      // IMPORTANT:
+      // Do NOT use item.totalprice because it is undefined.
+      // Calculate price using product.price × quantity.
       // --------------------------------------------------
 
       const receiptItems = cart.items
-        .map(
-          (item) => `
+        .map((item) => {
+          const unitPrice = Number(item.product.price) || 0;
+          const quantity = Number(item.quantity) || 0;
+
+          const itemTotal = unitPrice * quantity;
+
+          return `
             <div class="item">
               <span class="item-name">
-                ${item.product.name} x${item.quantity}
+                ${item.product.name} x${quantity}
               </span>
 
               <span class="item-price">
-                KES ${item.totalprice}
+                KES ${itemTotal.toFixed(2)}
               </span>
             </div>
-          `
-        )
+          `;
+        })
         .join("");
+
+      // Calculate total safely
+      const calculatedTotal = cart.items.reduce(
+        (sum, item) => {
+          const price = Number(item.product.price) || 0;
+          const quantity = Number(item.quantity) || 0;
+
+          return sum + price * quantity;
+        },
+        0
+      );
+
+      const receiptTotal =
+        Number(cart.totalPrice) || calculatedTotal;
+
+      // --------------------------------------------------
+      // PRINT DOCUMENT
+      // --------------------------------------------------
 
       printDocument.open();
 
       printDocument.write(`
         <!DOCTYPE html>
+
         <html>
           <head>
 
@@ -280,7 +303,7 @@ export default function WaiterDashboard() {
 
               <div class="total">
                 <span>TOTAL</span>
-                <span>KES ${cart.totalPrice}</span>
+                <span>KES ${receiptTotal.toFixed(2)}</span>
               </div>
 
               <div class="line"></div>
@@ -294,15 +317,11 @@ export default function WaiterDashboard() {
             </div>
 
           </body>
+
         </html>
       `);
 
       printDocument.close();
-
-      // --------------------------------------------------
-      // WAIT FOR THE RECEIPT TO LOAD
-      // THEN PRINT ONLY THE IFRAME
-      // --------------------------------------------------
 
       const printWindow = iframe.contentWindow;
 
@@ -310,6 +329,7 @@ export default function WaiterDashboard() {
         throw new Error("Print window unavailable.");
       }
 
+      // Wait for iframe to finish rendering
       setTimeout(() => {
         try {
           printWindow.focus();
@@ -628,8 +648,7 @@ export default function WaiterDashboard() {
 
       {/* ==================================================
           RECEIPT PREVIEW
-          THIS IS ONLY A SCREEN PREVIEW.
-          IT IS NEVER USED FOR PRINTING.
+          SCREEN ONLY
           ================================================== */}
 
       {showReceipt && cart && (
@@ -638,7 +657,7 @@ export default function WaiterDashboard() {
 
           <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
 
-            {/* SCREEN-ONLY RECEIPT PREVIEW */}
+            {/* RECEIPT PREVIEW */}
 
             <div className="bg-white">
 
@@ -660,25 +679,32 @@ export default function WaiterDashboard() {
 
               <hr className="my-2 border-dashed" />
 
-              {cart.items.map((item) => (
+              {cart.items.map((item) => {
 
-                <div
-                  key={item.product.id}
-                  className="flex justify-between text-sm mb-1"
-                >
+                const unitPrice =
+                  Number(item.product.price) || 0;
 
-                  <span>
-                    {item.product.name} x
-                    {item.quantity}
-                  </span>
+                const itemTotal =
+                  unitPrice * item.quantity;
 
-                  <span>
-                    KES {item.totalprice}
-                  </span>
+                return (
+                  <div
+                    key={item.product.id}
+                    className="flex justify-between text-sm mb-1"
+                  >
 
-                </div>
+                    <span>
+                      {item.product.name} x
+                      {item.quantity}
+                    </span>
 
-              ))}
+                    <span>
+                      KES {itemTotal.toFixed(2)}
+                    </span>
+
+                  </div>
+                );
+              })}
 
               <hr className="my-2 border-dashed" />
 
@@ -689,7 +715,9 @@ export default function WaiterDashboard() {
                 </span>
 
                 <span>
-                  KES {cart.totalPrice}
+                  KES {(
+                    Number(cart.totalPrice) || 0
+                  ).toFixed(2)}
                 </span>
 
               </div>
@@ -706,7 +734,7 @@ export default function WaiterDashboard() {
 
             </div>
 
-            {/* THESE BUTTONS ARE SCREEN ONLY */}
+            {/* SCREEN BUTTONS */}
 
             <div className="mt-4 flex justify-center gap-3">
 
