@@ -10,6 +10,7 @@ import useAddToCart from "@/hooks/useAddToCart";
 import useCheckout from "@/hooks/useCheckout";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
+ 
 
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ export default function WaiterDashboard() {
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
+  const { clearItems } = useCartStore(); 
 
   const {
     incrementItemCount,
@@ -84,283 +86,106 @@ export default function WaiterDashboard() {
   // ONLY THE RECEIPT IS SENT TO PRINT
   // --------------------------------------------------
 
-  const printReceipt = () => {
-    if (!cart) {
-      alert("Receipt not found.");
-      return;
-    }
 
-    try {
-      // Create hidden iframe
-      const iframe = document.createElement("iframe");
 
-      iframe.style.position = "fixed";
-      iframe.style.right = "0";
-      iframe.style.bottom = "0";
-      iframe.style.width = "1px";
-      iframe.style.height = "1px";
-      iframe.style.border = "0";
-      iframe.style.opacity = "0";
-      iframe.style.pointerEvents = "none";
+const printReceipt = () => {
+  if (!cart) {
+    alert("Receipt not found.");
+    return;
+  }
 
-      document.body.appendChild(iframe);
+  try {
+    // Create hidden iframe
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
 
-      const printDocument =
-        iframe.contentDocument ||
-        iframe.contentWindow?.document;
+    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!printDocument) throw new Error("Unable to create print document.");
 
-      if (!printDocument) {
-        throw new Error("Unable to create print document.");
-      }
+    // Build receipt items
+    const receiptItems = cart.items.map((item) => {
+      const unitPrice = Number(item.product.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      const itemTotal = unitPrice * quantity;
+      return `
+        <div class="item">
+          <span class="item-name">${item.product.name} x${quantity}</span>
+          <span class="item-price">KES ${itemTotal.toFixed(2)}</span>
+        </div>
+      `;
+    }).join("");
 
-      // --------------------------------------------------
-      // CALCULATE RECEIPT ITEMS
-      // IMPORTANT:
-      // Do NOT use item.totalprice because it is undefined.
-      // Calculate price using product.price × quantity.
-      // --------------------------------------------------
+    const calculatedTotal = cart.items.reduce((sum, item) => {
+      const price = Number(item.product.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      return sum + price * quantity;
+    }, 0);
 
-      const receiptItems = cart.items
-        .map((item) => {
-          const unitPrice = Number(item.product.price) || 0;
-          const quantity = Number(item.quantity) || 0;
+    const receiptTotal = Number(cart.totalPrice) || calculatedTotal;
 
-          const itemTotal = unitPrice * quantity;
-
-          return `
-            <div class="item">
-              <span class="item-name">
-                ${item.product.name} x${quantity}
-              </span>
-
-              <span class="item-price">
-                KES ${itemTotal.toFixed(2)}
-              </span>
+    // Write receipt HTML
+    printDocument.open();
+    printDocument.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>Receipt</title>
+          <style>
+            @page { size: 58mm auto; margin: 0; }
+            body { font-family: monospace; font-size: 11px; line-height: 1.25; }
+            .receipt { width: 58mm; padding: 3mm; }
+            .line { border-top: 1px dashed black; margin: 6px 0; }
+            .item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .total { display: flex; justify-content: space-between; font-weight: bold; }
+            .thank-you { text-align: center; font-size: 10px; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="receipt">
+            <div style="text-align:center;">
+              <div style="font-weight:bold;">HOTEL POS</div>
+              <div>Kapkatet, Kericho</div>
+              <div>Tel: 0712 345 678</div>
             </div>
-          `;
-        })
-        .join("");
+            <div class="line"></div>
+            ${receiptItems}
+            <div class="line"></div>
+            <div class="total"><span>TOTAL</span><span>KES ${receiptTotal.toFixed(2)}</span></div>
+            <div class="line"></div>
+            <div class="thank-you">Thank you!<br/>Welcome again 🌟</div>
+          </div>
+        </body>
+      </html>
+    `);
+    printDocument.close();
 
-      // Calculate total safely
-      const calculatedTotal = cart.items.reduce(
-        (sum, item) => {
-          const price = Number(item.product.price) || 0;
-          const quantity = Number(item.quantity) || 0;
+    const printWindow = iframe.contentWindow;
+    setTimeout(() => {
+      printWindow?.focus();
+      printWindow?.print();
 
-          return sum + price * quantity;
-        },
-        0
-      );
+      // ✅ Clear cart items after printing
+      clearItems();
 
-      const receiptTotal =
-        Number(cart.totalPrice) || calculatedTotal;
-
-      // --------------------------------------------------
-      // PRINT DOCUMENT
-      // --------------------------------------------------
-
-      printDocument.open();
-
-      printDocument.write(`
-        <!DOCTYPE html>
-
-        <html>
-          <head>
-
-            <meta charset="UTF-8" />
-
-            <title>Receipt</title>
-
-            <style>
-
-              @page {
-                size: 58mm auto;
-                margin: 0;
-              }
-
-              html,
-              body {
-                width: 58mm;
-                margin: 0;
-                padding: 0;
-                background: white;
-              }
-
-              body {
-                font-family: monospace;
-                color: black;
-                font-size: 11px;
-                line-height: 1.25;
-              }
-
-              .receipt {
-                width: 58mm;
-                box-sizing: border-box;
-
-                padding-top: 2mm;
-                padding-left: 3mm;
-                padding-right: 3mm;
-                padding-bottom: 5mm;
-
-                margin: 0;
-
-                background: white;
-                color: black;
-
-                overflow: hidden;
-              }
-
-              .center {
-                text-align: center;
-              }
-
-              .title {
-                font-size: 16px;
-                font-weight: bold;
-                margin-bottom: 3px;
-              }
-
-              .small {
-                font-size: 11px;
-              }
-
-              .line {
-                border-top: 1px dashed black;
-                margin-top: 7px;
-                margin-bottom: 7px;
-                height: 1px;
-              }
-
-              .item {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-
-                margin-bottom: 5px;
-
-                font-size: 11px;
-              }
-
-              .item-name {
-                width: 65%;
-                text-align: left;
-
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-              }
-
-              .item-price {
-                width: 35%;
-                text-align: right;
-                white-space: nowrap;
-              }
-
-              .total {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-
-                font-weight: bold;
-                font-size: 12px;
-              }
-
-              .thank-you {
-                text-align: center;
-                font-size: 10px;
-                margin-top: 8px;
-              }
-
-            </style>
-
-          </head>
-
-          <body>
-
-            <div class="receipt">
-
-              <div class="center">
-
-                <div class="title">
-                  HOTEL POS
-                </div>
-
-                <div class="small">
-                  Kapkatet, Kericho
-                </div>
-
-                <div class="small">
-                  Tel: 0712 345 678
-                </div>
-
-              </div>
-
-              <div class="line"></div>
-
-              ${receiptItems}
-
-              <div class="line"></div>
-
-              <div class="total">
-                <span>TOTAL</span>
-                <span>KES ${receiptTotal.toFixed(2)}</span>
-              </div>
-
-              <div class="line"></div>
-
-              <div class="thank-you">
-                Thank you!
-                <br />
-                Welcome again
-              </div>
-
-            </div>
-
-          </body>
-
-        </html>
-      `);
-
-      printDocument.close();
-
-      const printWindow = iframe.contentWindow;
-
-      if (!printWindow) {
-        throw new Error("Print window unavailable.");
-      }
-
-      // Wait for iframe to finish rendering
+      // Remove iframe
       setTimeout(() => {
-        try {
-          printWindow.focus();
+        iframe.parentNode?.removeChild(iframe);
+      }, 2000);
+    }, 500);
 
-          printWindow.print();
+  } catch (error) {
+    console.error("Printing error:", error);
+    alert("Printing failed. Please check printer connection.");
+  }
+};
 
-        } catch (error) {
-          console.error("Print failed:", error);
-
-          alert(
-            "Printing failed. Please check the printer connection."
-          );
-        }
-
-        // Remove iframe after printing
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 2000);
-
-      }, 500);
-
-    } catch (error) {
-      console.error("Printing error:", error);
-
-      alert(
-        "Printing failed. Please check the printer connection."
-      );
-    }
-  };
 
   // --------------------------------------------------
   // ADD TO CART
