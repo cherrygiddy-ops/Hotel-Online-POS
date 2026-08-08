@@ -11,6 +11,14 @@ import useCheckout from "@/hooks/useCheckout";
 import { useQueryClient } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
+import { registerPlugin } from '@capacitor/core';
+declare global {
+  interface Window {
+    AndroidPrinter?: {
+      printReceipt(text: string): void;
+    };
+  }
+}
 
 const printStyles = `
 @media print {
@@ -84,29 +92,52 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-const printReceipt = () => {
 
-  alert("Print button clicked");
 
-  if (!cart) return;
+const PrinterBridge = registerPlugin<any>('PrinterBridge');
 
-  const receipt = `
+
+const printReceipt = async () => {
+
+    if (!cart) return;
+
+    const receipt = `
 HOTEL POS
+----------------
+
+${cart.items
+.map(
+(item) =>
+`${item.product.name} x${item.quantity}   KES ${item.totalprice}`
+)
+.join('\n')}
+
+----------------
 
 TOTAL: KES ${cart.totalPrice}
 
 Thank you!
+Welcome again!
+
+
 `;
 
-  const intentUrl =
-    `intent://print#Intent;` +
-    `action=android.intent.action.SEND;` +
-    `type=text/plain;` +
-    `S.text=${encodeURIComponent(receipt)};` +
-    `end`;
+    try {
 
-  window.location.href = intentUrl;
+        await PrinterBridge.printText({
+            text: receipt
+        });
+
+        console.log("Print sent");
+
+    } catch(error){
+
+        console.error("Printing error:", error);
+        alert("Printer error");
+
+    }
 };
+
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
