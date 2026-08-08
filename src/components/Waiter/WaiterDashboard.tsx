@@ -98,8 +98,9 @@ const PrinterBridge = registerPlugin<any>('PrinterBridge');
 
 
 const printReceipt = async () => {
-  if (!cart) return;
+  if (!cart || !cart.items?.length) return;
 
+  // Build receipt text
   const receipt = `
 HOTEL POS
 Kapkatet, Kericho
@@ -107,11 +108,11 @@ Tel: 0712 345 678
 ----------------------------
 
 ${cart.items
-  .map(
-    (item) =>
-      `${item.product.name} x${item.quantity}   KES ${item.totalprice}`
-  )
-  .join('\n')}
+    .map(
+      (item) =>
+        `${item.product.name} x${item.quantity}   KES ${item.totalprice}`
+    )
+    .join('\n')}
 
 ----------------------------
 TOTAL: KES ${cart.totalPrice}
@@ -121,15 +122,18 @@ Welcome again!
 `;
 
   try {
+    // POS‑T2Pro exposes PrinterBridge
     // @ts-ignore
     await window.PrinterBridge.printReceipt({
       text: receipt,
     });
+    console.log("Receipt sent to printer");
   } catch (error) {
-    console.error('Printing error:', error);
-    alert('Printing failed');
+    console.error("Printing error:", error);
+    alert("Printing failed. Please check printer connection.");
   }
 };
+
 
   const handleAddToCart = (product: Product) => {
     addItem.mutate({ cartId: cart!.id, product });
