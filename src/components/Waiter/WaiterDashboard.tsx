@@ -89,6 +89,7 @@ const handleCheckout = () => {
 // --------------------------------------------------
 // PRINT RECEIPT (call API + print + clear cart)
 // --------------------------------------------------
+
 const printReceipt = async () => {
   if (!receiptCart) {
     alert("Receipt not found.");
@@ -96,26 +97,11 @@ const printReceipt = async () => {
   }
 
   try {
-    // ✅ Call checkout endpoint here
+    // Call checkout endpoint
     const response: CheckoutResponseDto = await apiClient.checkout({
       cartId: receiptCart.id,
-      // paymentMethod and phoneNumber optional
     });
-
     console.log("Order placed:", response.orderId);
-
-    // Build hidden iframe for printing
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
-
-    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!printDocument) throw new Error("Unable to create print document.");
 
     const receiptItems = receiptCart.items.map((item) => {
       const unitPrice = Number(item.product.price) || 0;
@@ -137,9 +123,7 @@ const printReceipt = async () => {
 
     const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // ✅ Full styling
-    printDocument.open();
-    printDocument.write(`
+    const receiptHtml = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -171,23 +155,37 @@ const printReceipt = async () => {
           </div>
         </body>
       </html>
-    `);
+    `;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
+
+    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!printDocument) throw new Error("Unable to create print document.");
+
+    printDocument.open();
+    printDocument.write(receiptHtml);
     printDocument.close();
 
+    // ✅ Delay to allow rendering before printing
     setTimeout(() => {
       const printWindow = iframe.contentWindow;
       printWindow?.focus();
       printWindow?.print();
 
-      // ✅ Close modal after printing
+      // Close modal and clear cart
       setShowReceipt(false);
-
-      // ✅ Clear cart in Zustand store AFTER printing
       useCartStore.getState().clearCart();
 
       // Remove iframe
       setTimeout(() => iframe.remove(), 500);
-    }, 500);
+    }, 300);
 
   } catch (error) {
     console.error("Printing error:", error);
