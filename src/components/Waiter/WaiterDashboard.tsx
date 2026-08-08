@@ -70,6 +70,9 @@ export default function WaiterDashboard() {
     {} as Record<string, typeof productsQuery.data>
   );
 
+  // --------------------------------------------------
+// CHECKOUT
+// --------------------------------------------------
 const handleCheckout = async () => {
   if (!cart?.id) return;
 
@@ -81,13 +84,10 @@ const handleCheckout = async () => {
 
     console.log("Order placed:", response.orderId);
 
-    // ✅ Save snapshot before clearing
+    // ✅ Save snapshot (do NOT clear cart here)
     setReceiptCart({ ...cart });
 
-    // ✅ Optimistically clear cart in Zustand store
-    useCartStore.getState().clearCart();
-
-    // ✅ Show receipt
+    // ✅ Show receipt modal
     setShowReceipt(true);
 
     if (response.stripeCheckoutUrl) {
@@ -182,8 +182,11 @@ const printReceipt = () => {
       printWindow?.focus();
       printWindow?.print();
 
-      // ✅ Close the print window automatically after printing
-      printWindow?.close();
+      // ✅ Close receipt modal after printing
+      setShowReceipt(false);
+
+      // ✅ Clear cart in Zustand store AFTER printing
+      useCartStore.getState().clearCart();
 
       // Remove iframe
       setTimeout(() => iframe.remove(), 500);
@@ -194,6 +197,7 @@ const printReceipt = () => {
     alert("Printing failed. Please check printer connection.");
   }
 };
+
 
 
 
