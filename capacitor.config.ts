@@ -3,11 +3,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.onlinePos',
   appName: 'Online POS',
+  webDir: 'dist',
   server: {
-    url: 'https://steak.hotelpos.top/',
+    url: 'https://steak.hotelpos.top',
     cleartext: false
   }
 };
 
 export default config;
-
