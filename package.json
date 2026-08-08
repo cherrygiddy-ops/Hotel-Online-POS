@@ -13,6 +13,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.10.9",
     "@hookform/resolvers": "^3.10.0",
@@ -70,6 +72,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@eslint/js": "^9.32.0",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.16",
