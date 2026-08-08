@@ -94,6 +94,8 @@ export default function WaiterDashboard() {
 
 
 
+  
+
 const PrinterBridge = registerPlugin<any>('PrinterBridge');
 
 
