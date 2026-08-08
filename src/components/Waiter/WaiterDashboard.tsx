@@ -159,35 +159,46 @@ const printReceipt = async () => {
     `;
 
     // Create hidden iframe
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
+   const iframe = document.createElement("iframe");
+iframe.style.position = "fixed";
+iframe.style.right = "0";
+iframe.style.bottom = "0";
+iframe.style.width = "1px";
+iframe.style.height = "1px";
+iframe.style.border = "0";
+iframe.style.opacity = "0";
+iframe.style.pointerEvents = "none";
 
-    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!printDocument) throw new Error("Unable to create print document.");
+document.body.appendChild(iframe);
 
-    printDocument.open();
-    printDocument.write(receiptHtml);
-    printDocument.close();
+const printWindow = iframe.contentWindow;
 
-    // ✅ Delay to allow rendering before printing
+if (!printWindow) {
+  throw new Error("Unable to create print window.");
+}
+
+// Write receipt into iframe
+printWindow.document.open();
+printWindow.document.write(receiptHtml);
+printWindow.document.close();
+
+// Wait for iframe to fully load before printing
+iframe.onload = () => {
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+
+    // Close modal and clear cart
+    setShowReceipt(false);
+    useCartStore.getState().clearCart();
+
+    // Remove iframe after printing
     setTimeout(() => {
-      const printWindow = iframe.contentWindow;
-      printWindow?.focus();
-      printWindow?.print();
+      iframe.remove();
+    }, 1000);
 
-      // Close modal and clear cart
-      setShowReceipt(false);
-      useCartStore.getState().clearCart();
-
-      // Remove iframe
-      setTimeout(() => iframe.remove(), 500);
-    }, 300);
+  }, 500);
+}
 
   } catch (error) {
     console.error("Printing error:", error);
