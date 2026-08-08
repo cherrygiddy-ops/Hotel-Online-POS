@@ -96,9 +96,6 @@ export default function WaiterDashboard() {
 
   
 
-const PrinterBridge = registerPlugin<any>('PrinterBridge');
-
-
 const printReceipt = async () => {
   if (!cart || !cart.items?.length) return;
 
@@ -124,17 +121,21 @@ Welcome again!
 `;
 
   try {
-    // POS‑T2Pro exposes PrinterBridge
-    // @ts-ignore
-    await window.PrinterBridge.printReceipt({
-      text: receipt,
-    });
-    console.log("Receipt sent to printer");
+    // Inject print styles so only the receipt prints
+    const style = document.createElement("style");
+    style.innerHTML = printStyles;
+    document.head.appendChild(style);
+
+    // Trigger browser print
+    window.print();
+    console.log("Receipt printed via browser");
   } catch (error) {
     console.error("Printing error:", error);
     alert("Printing failed. Please check printer connection.");
   }
 };
+
+
 
 
   const handleAddToCart = (product: Product) => {
