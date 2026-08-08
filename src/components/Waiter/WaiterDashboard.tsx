@@ -11,6 +11,14 @@ import useCheckout from "@/hooks/useCheckout";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
 
+declare global {
+  interface Window {
+    AndroidPrinter?: {
+      printReceipt(text: string): void;
+    };
+  }
+}
+
 export default function WaiterDashboard() {
   const { productsQuery } = useProducts();
   const { data: cart, isLoading } = useCart();
@@ -18,7 +26,6 @@ export default function WaiterDashboard() {
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
-  const checkoutMutation = useCheckout();
 
   const {
     incrementItemCount,
@@ -29,6 +36,12 @@ export default function WaiterDashboard() {
   const [search, setSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
 
+  const checkoutMutation = useCheckout();
+
+  // --------------------------------------------------
+  // LOADING / ERROR
+  // --------------------------------------------------
+
   if (productsQuery.isLoading || isLoading) {
     return <div>Loading menu...</div>;
   }
@@ -36,6 +49,10 @@ export default function WaiterDashboard() {
   if (productsQuery.error) {
     return <div>Error loading products</div>;
   }
+
+  // --------------------------------------------------
+  // GROUP PRODUCTS BY CATEGORY
+  // --------------------------------------------------
 
   const grouped = productsQuery.data?.reduce(
     (acc, product) => {
@@ -52,206 +69,283 @@ export default function WaiterDashboard() {
     {} as Record<string, typeof productsQuery.data>
   );
 
-  /*
-   * CHECKOUT
-   */
+  // --------------------------------------------------
+  // CHECKOUT
+  // --------------------------------------------------
+
   const handleCheckout = () => {
-    if (!cart?.id || !cart?.items?.length) {
-      return;
-    }
+    if (!cart?.id) return;
 
     setShowReceipt(true);
   };
 
-  /*
-   * PRINT RECEIPT
-   *
-   * IMPORTANT:
-   * We create ONE temporary receipt specifically for printing.
-   * We do NOT print the modal.
-   * We do NOT use visibility:hidden.
-   * We do NOT use #thermal-receipt.
-   */
-const printReceipt = () => {
-  if (!cart || !cart.items?.length) {
-    alert("No receipt items found.");
-    return;
-  }
+  // --------------------------------------------------
+  // PRINT RECEIPT
+  // IMPORTANT:
+  // We DO NOT use window.print().
+  // We create a separate hidden iframe containing
+  // ONLY the receipt.
+  // --------------------------------------------------
 
-  const style = document.createElement("style");
-
-  style.id = "thermal-print-style";
-
-  style.innerHTML = `
-    @media print {
-
-      @page {
-        size: 58mm auto;
-        margin: 0;
-      }
-
-      html,
-      body {
-        width: 58mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-      }
-
-      /* Hide EVERYTHING */
-      body > * {
-        display: none !important;
-      }
-
-      /* Show ONLY the print receipt */
-      #thermal-print-receipt {
-        display: block !important;
-
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-
-        width: 58mm !important;
-        max-width: 58mm !important;
-
-        margin: 0 !important;
-        padding: 2mm !important;
-
-        box-sizing: border-box !important;
-
-        font-family: monospace !important;
-        font-size: 11px !important;
-        line-height: 1.25 !important;
-
-        color: black !important;
-        background: white !important;
-
-        page-break-before: avoid !important;
-        page-break-after: avoid !important;
-        page-break-inside: avoid !important;
-
-        break-before: avoid !important;
-        break-after: avoid !important;
-        break-inside: avoid !important;
-      }
-
-      #thermal-print-receipt * {
-        page-break-before: avoid !important;
-        page-break-after: avoid !important;
-        page-break-inside: avoid !important;
-
-        break-before: avoid !important;
-        break-after: avoid !important;
-        break-inside: avoid !important;
-      }
+  const printReceipt = () => {
+    if (!cart) {
+      alert("Receipt not found.");
+      return;
     }
 
-    @media screen {
-      #thermal-print-receipt {
-        display: none;
+    try {
+      // Create a hidden iframe
+      const iframe = document.createElement("iframe");
+
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "1px";
+      iframe.style.height = "1px";
+      iframe.style.border = "0";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+
+      document.body.appendChild(iframe);
+
+      const printDocument =
+        iframe.contentDocument ||
+        iframe.contentWindow?.document;
+
+      if (!printDocument) {
+        throw new Error("Unable to create print document.");
       }
+
+      // --------------------------------------------------
+      // RECEIPT HTML
+      // ONLY THIS CONTENT WILL BE PRINTED
+      // --------------------------------------------------
+
+      const receiptItems = cart.items
+        .map(
+          (item) => `
+            <div class="item">
+              <span class="item-name">
+                ${item.product.name} x${item.quantity}
+              </span>
+
+              <span class="item-price">
+                KES ${item.totalprice}
+              </span>
+            </div>
+          `
+        )
+        .join("");
+
+      printDocument.open();
+
+      printDocument.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+
+            <meta charset="UTF-8" />
+
+            <title>Receipt</title>
+
+            <style>
+
+              @page {
+                size: 58mm auto;
+                margin: 0;
+              }
+
+              html,
+              body {
+                width: 58mm;
+                margin: 0;
+                padding: 0;
+                background: white;
+              }
+
+              body {
+                font-family: monospace;
+                color: black;
+                font-size: 11px;
+                line-height: 1.25;
+              }
+
+              .receipt {
+                width: 58mm;
+                box-sizing: border-box;
+
+                padding-top: 2mm;
+                padding-left: 3mm;
+                padding-right: 3mm;
+                padding-bottom: 5mm;
+
+                margin: 0;
+
+                background: white;
+                color: black;
+
+                overflow: hidden;
+              }
+
+              .center {
+                text-align: center;
+              }
+
+              .title {
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 3px;
+              }
+
+              .small {
+                font-size: 11px;
+              }
+
+              .line {
+                border-top: 1px dashed black;
+                margin-top: 7px;
+                margin-bottom: 7px;
+                height: 1px;
+              }
+
+              .item {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+
+                margin-bottom: 5px;
+
+                font-size: 11px;
+              }
+
+              .item-name {
+                width: 65%;
+                text-align: left;
+
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+              }
+
+              .item-price {
+                width: 35%;
+                text-align: right;
+                white-space: nowrap;
+              }
+
+              .total {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+
+                font-weight: bold;
+                font-size: 12px;
+              }
+
+              .thank-you {
+                text-align: center;
+                font-size: 10px;
+                margin-top: 8px;
+              }
+
+            </style>
+
+          </head>
+
+          <body>
+
+            <div class="receipt">
+
+              <div class="center">
+
+                <div class="title">
+                  HOTEL POS
+                </div>
+
+                <div class="small">
+                  Kapkatet, Kericho
+                </div>
+
+                <div class="small">
+                  Tel: 0712 345 678
+                </div>
+
+              </div>
+
+              <div class="line"></div>
+
+              ${receiptItems}
+
+              <div class="line"></div>
+
+              <div class="total">
+                <span>TOTAL</span>
+                <span>KES ${cart.totalPrice}</span>
+              </div>
+
+              <div class="line"></div>
+
+              <div class="thank-you">
+                Thank you!
+                <br />
+                Welcome again
+              </div>
+
+            </div>
+
+          </body>
+        </html>
+      `);
+
+      printDocument.close();
+
+      // --------------------------------------------------
+      // WAIT FOR THE RECEIPT TO LOAD
+      // THEN PRINT ONLY THE IFRAME
+      // --------------------------------------------------
+
+      const printWindow = iframe.contentWindow;
+
+      if (!printWindow) {
+        throw new Error("Print window unavailable.");
+      }
+
+      setTimeout(() => {
+        try {
+          printWindow.focus();
+
+          printWindow.print();
+
+        } catch (error) {
+          console.error("Print failed:", error);
+
+          alert(
+            "Printing failed. Please check the printer connection."
+          );
+        }
+
+        // Remove iframe after printing
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 2000);
+
+      }, 500);
+
+    } catch (error) {
+      console.error("Printing error:", error);
+
+      alert(
+        "Printing failed. Please check the printer connection."
+      );
     }
-  `;
-
-  document.head.appendChild(style);
-
-  // Create ONE print-only receipt
-  const printReceiptElement = document.createElement("div");
-
-  printReceiptElement.id = "thermal-print-receipt";
-
-  printReceiptElement.innerHTML = `
-    <div style="text-align:center;">
-      <div style="font-weight:bold;font-size:16px;">
-        HOTEL POS
-      </div>
-
-      <div>Kapkatet, Kericho</div>
-      <div>Tel: 0712 345 678</div>
-    </div>
-
-    <div style="
-      border-top:1px dashed black;
-      margin:6px 0;
-    "></div>
-
-    ${cart.items
-      .map(
-        (item) => `
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            width:100%;
-            margin-bottom:3px;
-          ">
-            <span>
-              ${item.product.name} x${item.quantity}
-            </span>
-
-            <span>
-              KES ${item.totalprice}
-            </span>
-          </div>
-        `
-      )
-      .join("")}
-
-    <div style="
-      border-top:1px dashed black;
-      margin:6px 0;
-    "></div>
-
-    <div style="
-      display:flex;
-      justify-content:space-between;
-      font-weight:bold;
-      font-size:13px;
-    ">
-      <span>TOTAL</span>
-      <span>KES ${cart.totalPrice}</span>
-    </div>
-
-    <div style="
-      border-top:1px dashed black;
-      margin:6px 0;
-    "></div>
-
-    <div style="
-      text-align:center;
-      margin-top:8px;
-    ">
-      Thank you!<br>
-      Welcome again
-    </div>
-  `;
-
-  document.body.appendChild(printReceiptElement);
-
-  // Wait for browser to render the receipt
-  setTimeout(() => {
-    window.print();
-  }, 100);
-
-  // Remove print receipt after printing
-  const cleanup = () => {
-    printReceiptElement.remove();
-    style.remove();
-
-    window.removeEventListener(
-      "afterprint",
-      cleanup
-    );
   };
 
-  window.addEventListener(
-    "afterprint",
-    cleanup
-  );
-};
+  // --------------------------------------------------
+  // ADD TO CART
+  // --------------------------------------------------
 
-  /*
-   * CART
-   */
   const handleAddToCart = (product: Product) => {
     if (!cart?.id) return;
 
@@ -260,6 +354,10 @@ const printReceipt = () => {
       product,
     });
   };
+
+  // --------------------------------------------------
+  // INCREASE
+  // --------------------------------------------------
 
   const handleIncrease = (
     productId: string,
@@ -276,6 +374,10 @@ const printReceipt = () => {
     incrementItemCount();
   };
 
+  // --------------------------------------------------
+  // DECREASE
+  // --------------------------------------------------
+
   const handleDecrease = (
     productId: string,
     qty: number
@@ -283,12 +385,6 @@ const printReceipt = () => {
     if (!cart?.id) return;
 
     if (qty <= 1) {
-      deleteItem.mutate({
-        cartId: cart.id,
-        productId,
-      });
-
-      decrementItemCount();
       return;
     }
 
@@ -300,6 +396,10 @@ const printReceipt = () => {
 
     decrementItemCount();
   };
+
+  // --------------------------------------------------
+  // REMOVE
+  // --------------------------------------------------
 
   const handleRemove = (
     productId: string,
@@ -315,6 +415,10 @@ const printReceipt = () => {
     decrementItemCountByQuantity(qty);
   };
 
+  // --------------------------------------------------
+  // PAGE
+  // --------------------------------------------------
+
   return (
     <main className="max-w-5xl mx-auto p-4">
 
@@ -323,25 +427,30 @@ const printReceipt = () => {
       </h1>
 
       {/* SEARCH */}
+
       <Input
         type="text"
         placeholder="Search items..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
         className="mb-6 h-11"
       />
 
       {/* PRODUCTS */}
+
       <div className="space-y-6">
 
         {grouped &&
           Object.entries(grouped).map(
             ([category, items], idx) => {
 
-              const filtered = items.filter((item) =>
-                item.name
-                  .toLowerCase()
-                  .includes(search.toLowerCase())
+              const filtered = items.filter(
+                (item) =>
+                  item.name
+                    .toLowerCase()
+                    .includes(search.toLowerCase())
               );
 
               if (filtered.length === 0) {
@@ -372,6 +481,7 @@ const printReceipt = () => {
                   <div className="flex flex-col gap-3">
 
                     {filtered.map((item) => (
+
                       <Button
                         key={item.id}
                         variant="outline"
@@ -382,6 +492,7 @@ const printReceipt = () => {
                       >
                         {item.name} – Kes {item.price}
                       </Button>
+
                     ))}
 
                   </div>
@@ -394,6 +505,7 @@ const printReceipt = () => {
       </div>
 
       {/* CART */}
+
       <div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
 
         <div className="bg-white border-t border-gray-300 p-6 h-64 shadow-lg flex flex-col w-full max-w-5xl">
@@ -473,17 +585,20 @@ const printReceipt = () => {
                 </div>
 
               ))
+
             )}
 
           </div>
 
           {/* TOTAL */}
+
           <div className="mt-3 flex justify-between items-center border-t border-gray-200 pt-3">
 
             <span className="text-sm font-semibold">
               Total Items:{" "}
               {cart?.items?.reduce(
-                (sum, i) => sum + i.quantity,
+                (sum, i) =>
+                  sum + i.quantity,
                 0
               )}
             </span>
@@ -497,8 +612,7 @@ const printReceipt = () => {
               className="h-10 px-6 bg-green-600 text-white hover:bg-green-700"
               onClick={handleCheckout}
               disabled={
-                checkoutMutation.isPending ||
-                !cart?.items?.length
+                checkoutMutation.isPending
               }
             >
               {checkoutMutation.isPending
@@ -512,17 +626,24 @@ const printReceipt = () => {
 
       </div>
 
-      {/* RECEIPT PREVIEW MODAL */}
+      {/* ==================================================
+          RECEIPT PREVIEW
+          THIS IS ONLY A SCREEN PREVIEW.
+          IT IS NEVER USED FOR PRINTING.
+          ================================================== */}
+
       {showReceipt && cart && (
 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
 
           <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
 
-            {/* SCREEN PREVIEW ONLY */}
-            <div className="font-mono text-sm">
+            {/* SCREEN-ONLY RECEIPT PREVIEW */}
+
+            <div className="bg-white">
 
               <div className="text-center">
+
                 <h2 className="font-bold text-lg">
                   HOTEL POS
                 </h2>
@@ -534,6 +655,7 @@ const printReceipt = () => {
                 <p>
                   Tel: 0712 345 678
                 </p>
+
               </div>
 
               <hr className="my-2 border-dashed" />
@@ -562,7 +684,9 @@ const printReceipt = () => {
 
               <div className="flex justify-between font-bold">
 
-                <span>TOTAL</span>
+                <span>
+                  TOTAL
+                </span>
 
                 <span>
                   KES {cart.totalPrice}
@@ -573,14 +697,17 @@ const printReceipt = () => {
               <hr className="my-2 border-dashed" />
 
               <div className="text-center text-xs mt-3">
+
                 Thank you!
                 <br />
-                Welcome again
+                Welcome again 🌟
+
               </div>
 
             </div>
 
-            {/* BUTTONS */}
+            {/* THESE BUTTONS ARE SCREEN ONLY */}
+
             <div className="mt-4 flex justify-center gap-3">
 
               <Button
