@@ -72,215 +72,182 @@ export default function WaiterDashboard() {
    * We do NOT use visibility:hidden.
    * We do NOT use #thermal-receipt.
    */
-  const printReceipt = () => {
-    if (!cart || !cart.items?.length) {
-      alert("No receipt items found.");
-      return;
+const printReceipt = () => {
+  if (!cart || !cart.items?.length) {
+    alert("No receipt items found.");
+    return;
+  }
+
+  const style = document.createElement("style");
+
+  style.id = "thermal-print-style";
+
+  style.innerHTML = `
+    @media print {
+
+      @page {
+        size: 58mm auto;
+        margin: 0;
+      }
+
+      html,
+      body {
+        width: 58mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+      }
+
+      /* Hide EVERYTHING */
+      body > * {
+        display: none !important;
+      }
+
+      /* Show ONLY the print receipt */
+      #thermal-print-receipt {
+        display: block !important;
+
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+
+        width: 58mm !important;
+        max-width: 58mm !important;
+
+        margin: 0 !important;
+        padding: 2mm !important;
+
+        box-sizing: border-box !important;
+
+        font-family: monospace !important;
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+
+        color: black !important;
+        background: white !important;
+
+        page-break-before: avoid !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+
+        break-before: avoid !important;
+        break-after: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      #thermal-print-receipt * {
+        page-break-before: avoid !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+
+        break-before: avoid !important;
+        break-after: avoid !important;
+        break-inside: avoid !important;
+      }
     }
 
-    // Remove any previous print receipt
-    const oldReceipt = document.getElementById("print-receipt");
-
-    if (oldReceipt) {
-      oldReceipt.remove();
+    @media screen {
+      #thermal-print-receipt {
+        display: none;
+      }
     }
+  `;
 
-    // Create ONE receipt
-    const receipt = document.createElement("div");
+  document.head.appendChild(style);
 
-    receipt.id = "print-receipt";
+  // Create ONE print-only receipt
+  const printReceiptElement = document.createElement("div");
 
-    receipt.innerHTML = `
-      <div class="receipt-header">
-        <div class="receipt-title">HOTEL POS</div>
-        <div>Kapkatet, Kericho</div>
-        <div>Tel: 0712 345 678</div>
+  printReceiptElement.id = "thermal-print-receipt";
+
+  printReceiptElement.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-weight:bold;font-size:16px;">
+        HOTEL POS
       </div>
 
-      <div class="receipt-line"></div>
+      <div>Kapkatet, Kericho</div>
+      <div>Tel: 0712 345 678</div>
+    </div>
 
-      ${cart.items
-        .map(
-          (item) => `
-            <div class="receipt-item">
-              <span>
-                ${item.product.name} x${item.quantity}
-              </span>
+    <div style="
+      border-top:1px dashed black;
+      margin:6px 0;
+    "></div>
 
-              <span>
-                KES ${item.totalprice}
-              </span>
-            </div>
-          `
-        )
-        .join("")}
+    ${cart.items
+      .map(
+        (item) => `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            width:100%;
+            margin-bottom:3px;
+          ">
+            <span>
+              ${item.product.name} x${item.quantity}
+            </span>
 
-      <div class="receipt-line"></div>
+            <span>
+              KES ${item.totalprice}
+            </span>
+          </div>
+        `
+      )
+      .join("")}
 
-      <div class="receipt-total">
-        <span>TOTAL</span>
-        <span>KES ${cart.totalPrice}</span>
-      </div>
+    <div style="
+      border-top:1px dashed black;
+      margin:6px 0;
+    "></div>
 
-      <div class="receipt-line"></div>
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      font-weight:bold;
+      font-size:13px;
+    ">
+      <span>TOTAL</span>
+      <span>KES ${cart.totalPrice}</span>
+    </div>
 
-      <div class="receipt-footer">
-        Thank you!<br>
-        Welcome again
-      </div>
-    `;
+    <div style="
+      border-top:1px dashed black;
+      margin:6px 0;
+    "></div>
 
-    document.body.appendChild(receipt);
+    <div style="
+      text-align:center;
+      margin-top:8px;
+    ">
+      Thank you!<br>
+      Welcome again
+    </div>
+  `;
 
-    /*
-     * Print CSS.
-     *
-     * The browser will see ONLY ONE printable receipt.
-     */
-    const style = document.createElement("style");
+  document.body.appendChild(printReceiptElement);
 
-    style.id = "receipt-print-style";
+  // Wait for browser to render the receipt
+  setTimeout(() => {
+    window.print();
+  }, 100);
 
-    style.innerHTML = `
-      @media print {
+  // Remove print receipt after printing
+  const cleanup = () => {
+    printReceiptElement.remove();
+    style.remove();
 
-        @page {
-          size: 58mm auto;
-          margin: 0;
-        }
-
-        html,
-        body {
-          width: 58mm !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-        }
-
-        body > * {
-          display: none !important;
-        }
-
-        body > #print-receipt {
-          display: block !important;
-        }
-
-        #print-receipt {
-          width: 58mm !important;
-          max-width: 58mm !important;
-
-          margin: 0 !important;
-          padding: 2mm !important;
-
-          box-sizing: border-box !important;
-
-          font-family: "Courier New", monospace !important;
-          font-size: 11px !important;
-          line-height: 1.25 !important;
-
-          color: #000 !important;
-          background: #fff !important;
-
-          page-break-before: avoid !important;
-          page-break-after: avoid !important;
-          page-break-inside: avoid !important;
-
-          break-before: avoid !important;
-          break-after: avoid !important;
-          break-inside: avoid !important;
-        }
-
-        #print-receipt * {
-          page-break-before: avoid !important;
-          page-break-after: avoid !important;
-          page-break-inside: avoid !important;
-
-          break-before: avoid !important;
-          break-after: avoid !important;
-          break-inside: avoid !important;
-        }
-
-        .receipt-header {
-          text-align: center !important;
-        }
-
-        .receipt-title {
-          font-weight: bold !important;
-          font-size: 16px !important;
-          margin-bottom: 2px !important;
-        }
-
-        .receipt-line {
-          border-top: 1px dashed #000 !important;
-          margin: 6px 0 !important;
-          height: 1px !important;
-        }
-
-        .receipt-item {
-          display: flex !important;
-          justify-content: space-between !important;
-          width: 100% !important;
-          margin-bottom: 3px !important;
-          gap: 5px !important;
-        }
-
-        .receipt-total {
-          display: flex !important;
-          justify-content: space-between !important;
-          width: 100% !important;
-          font-weight: bold !important;
-          font-size: 13px !important;
-        }
-
-        .receipt-footer {
-          text-align: center !important;
-          margin-top: 8px !important;
-        }
-      }
-
-      @media screen {
-        #print-receipt {
-          display: none !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-
-    /*
-     * Give the browser a moment to render the receipt,
-     * then open the print dialog.
-     */
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.print();
-      });
-    });
-
-    /*
-     * After printing/canceling, remove the temporary
-     * receipt and print CSS.
-     */
-    const cleanup = () => {
-      const receiptElement =
-        document.getElementById("print-receipt");
-
-      const printStyle =
-        document.getElementById("receipt-print-style");
-
-      if (receiptElement) {
-        receiptElement.remove();
-      }
-
-      if (printStyle) {
-        printStyle.remove();
-      }
-
-      window.removeEventListener("afterprint", cleanup);
-    };
-
-    window.addEventListener("afterprint", cleanup);
+    window.removeEventListener(
+      "afterprint",
+      cleanup
+    );
   };
+
+  window.addEventListener(
+    "afterprint",
+    cleanup
+  );
+};
 
   /*
    * CART
