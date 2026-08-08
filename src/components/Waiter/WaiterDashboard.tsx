@@ -73,41 +73,38 @@ export default function WaiterDashboard() {
   // --------------------------------------------------
 // CHECKOUT
 // --------------------------------------------------
-const handleCheckout = async () => {
+// --------------------------------------------------
+// CHECKOUT (just open modal, no API call)
+// --------------------------------------------------
+const handleCheckout = () => {
   if (!cart?.id) return;
 
-  try {
-    const response: CheckoutResponseDto = await apiClient.checkout({
-      cartId: cart.id,
-      // paymentMethod and phoneNumber optional
-    });
+  // Save snapshot for preview
+  setReceiptCart({ ...cart });
 
-    console.log("Order placed:", response.orderId);
-
-    // ✅ Save snapshot (do NOT clear cart here)
-    setReceiptCart({ ...cart });
-
-    // ✅ Show receipt modal
-    setShowReceipt(true);
-
-    if (response.stripeCheckoutUrl) {
-      window.location.href = response.stripeCheckoutUrl;
-    }
-  } catch (err) {
-    console.error("Checkout failed:", err);
-  }
+  // Show receipt modal
+  setShowReceipt(true);
 };
 
 // --------------------------------------------------
-// PRINT RECEIPT
+// PRINT RECEIPT (call API + print + clear cart)
 // --------------------------------------------------
-const printReceipt = () => {
+const printReceipt = async () => {
   if (!receiptCart) {
     alert("Receipt not found.");
     return;
   }
 
   try {
+    // ✅ Call checkout endpoint here
+    const response: CheckoutResponseDto = await apiClient.checkout({
+      cartId: receiptCart.id,
+      // paymentMethod and phoneNumber optional
+    });
+
+    console.log("Order placed:", response.orderId);
+
+    // Build hidden iframe for printing
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.width = "1px";
@@ -140,7 +137,7 @@ const printReceipt = () => {
 
     const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // ✅ Full styling restored
+    // ✅ Full styling
     printDocument.open();
     printDocument.write(`
       <!DOCTYPE html>
@@ -182,7 +179,7 @@ const printReceipt = () => {
       printWindow?.focus();
       printWindow?.print();
 
-      // ✅ Close receipt modal after printing
+      // ✅ Close modal after printing
       setShowReceipt(false);
 
       // ✅ Clear cart in Zustand store AFTER printing
@@ -197,6 +194,7 @@ const printReceipt = () => {
     alert("Printing failed. Please check printer connection.");
   }
 };
+
 
 
 
