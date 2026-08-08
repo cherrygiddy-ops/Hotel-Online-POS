@@ -159,46 +159,41 @@ const printReceipt = async () => {
     `;
 
     // Create hidden iframe
-   const iframe = document.createElement("iframe");
+const iframe = document.createElement("iframe");
 iframe.style.position = "fixed";
-iframe.style.right = "0";
-iframe.style.bottom = "0";
 iframe.style.width = "1px";
 iframe.style.height = "1px";
 iframe.style.border = "0";
 iframe.style.opacity = "0";
 iframe.style.pointerEvents = "none";
-
 document.body.appendChild(iframe);
 
-const printWindow = iframe.contentWindow;
+// Get iframe document
+const printDocument =
+  iframe.contentDocument || iframe.contentWindow?.document;
 
-if (!printWindow) {
-  throw new Error("Unable to create print window.");
+if (!printDocument) {
+  throw new Error("Unable to create print document.");
 }
 
-// Write receipt into iframe
-printWindow.document.open();
-printWindow.document.write(receiptHtml);
-printWindow.document.close();
+// Write receipt HTML
+printDocument.open();
+printDocument.write(receiptHtml);
+printDocument.close();
 
-// Wait for iframe to fully load before printing
-iframe.onload = () => {
+// IMPORTANT: use timeout, not iframe.onload
+setTimeout(() => {
+  iframe.contentWindow?.focus();
+  iframe.contentWindow?.print();
+
+  setShowReceipt(false);
+  useCartStore.getState().clearCart();
+
   setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
+    iframe.parentNode?.removeChild(iframe);
+  }, 2000);
+}, 800);
 
-    // Close modal and clear cart
-    setShowReceipt(false);
-    useCartStore.getState().clearCart();
-
-    // Remove iframe after printing
-    setTimeout(() => {
-      iframe.remove();
-    }, 1000);
-
-  }, 500);
-}
 
   } catch (error) {
     console.error("Printing error:", error);
