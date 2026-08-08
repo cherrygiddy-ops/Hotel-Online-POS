@@ -1,6 +1,8 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { OrderSummaryDto } from "@/entities/OrderSummaryDto";
 import { useAuthStore } from "@/Store/AuthStore";
+import { CheckoutRequestDto } from "@/entities/CheckoutRequestDto";
+import { CheckoutResponseDto } from "@/entities/CheckoutResponseDto";
 console.log("url:"+import.meta.env.VITE_API_BASE_URL)
  export const axiosInstance = axios.create({
    baseURL: import.meta.env.VITE_API_BASE_URL
@@ -152,6 +154,16 @@ class APICLIENT<TRequest, TResponse> {
     const res = await axiosInstance.get("/auth/orders/summary");
     return res.data;
   };
+  checkout = async (
+    request: CheckoutRequestDto
+  ): Promise<CheckoutResponseDto> => {
+    const res = await axiosInstance.post<CheckoutResponseDto>(
+      "/auth/checkout",
+      request
+    );
+    return res.data;
+  };
+
 }
 
 export default APICLIENT;

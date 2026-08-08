@@ -10,7 +10,11 @@ import useAddToCart from "@/hooks/useAddToCart";
 import useCheckout from "@/hooks/useCheckout";
 import useCart from "@/hooks/useCart";
 import { useCartStore } from "@/Store/CartStore";
- 
+import APICLIENT from "@/services/ApiClient";
+import { CheckoutRequestDto } from "@/entities/CheckoutRequestDto";
+import { CheckoutResponseDto } from "@/entities/CheckoutResponseDto";
+import Cart from "@/entities/Cart";
+import { CartItem } from "@/entities/CartItem";
 
 declare global {
   interface Window {
@@ -21,13 +25,14 @@ declare global {
 }
 
 export default function WaiterDashboard() {
+  const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>("/auth/checkout");
   const { productsQuery } = useProducts();
   const { data: cart, isLoading } = useCart();
 
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
-  const { clearItems } = useCartStore(); 
+  const { clearCart } = useCartStore(); 
 
   const {
     incrementItemCount,
@@ -37,13 +42,13 @@ export default function WaiterDashboard() {
 
   const [search, setSearch] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptCart, setReceiptCart] = useState<Cart | null>(null);
 
   const checkoutMutation = useCheckout();
 
   // --------------------------------------------------
   // LOADING / ERROR
   // --------------------------------------------------
-
   if (productsQuery.isLoading || isLoading) {
     return <div>Loading menu...</div>;
   }
@@ -55,47 +60,54 @@ export default function WaiterDashboard() {
   // --------------------------------------------------
   // GROUP PRODUCTS BY CATEGORY
   // --------------------------------------------------
-
   const grouped = productsQuery.data?.reduce(
     (acc, product) => {
       const cat = product.categoryId;
-
-      if (!acc[cat]) {
-        acc[cat] = [];
-      }
-
+      if (!acc[cat]) acc[cat] = [];
       acc[cat].push(product);
-
       return acc;
     },
     {} as Record<string, typeof productsQuery.data>
   );
 
-  // --------------------------------------------------
-  // CHECKOUT
-  // --------------------------------------------------
+const handleCheckout = async () => {
+  if (!cart?.id) return;
 
-  const handleCheckout = () => {
-    if (!cart?.id) return;
+  try {
+    const response: CheckoutResponseDto = await apiClient.checkout({
+      cartId: cart.id,
+      // paymentMethod and phoneNumber optional
+    });
 
+    console.log("Order placed:", response.orderId);
+
+    // ✅ Save snapshot before clearing
+    setReceiptCart({ ...cart });
+
+    // ✅ Optimistically clear cart in Zustand store
+    useCartStore.getState().clearCart();
+
+    // ✅ Show receipt
     setShowReceipt(true);
-  };
 
-  // --------------------------------------------------
-  // PRINT RECEIPT
-  // ONLY THE RECEIPT IS SENT TO PRINT
-  // --------------------------------------------------
+    if (response.stripeCheckoutUrl) {
+      window.location.href = response.stripeCheckoutUrl;
+    }
+  } catch (err) {
+    console.error("Checkout failed:", err);
+  }
+};
 
-
-
+// --------------------------------------------------
+// PRINT RECEIPT
+// --------------------------------------------------
 const printReceipt = () => {
-  if (!cart) {
+  if (!receiptCart) {
     alert("Receipt not found.");
     return;
   }
 
   try {
-    // Create hidden iframe
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.width = "1px";
@@ -108,8 +120,7 @@ const printReceipt = () => {
     const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
     if (!printDocument) throw new Error("Unable to create print document.");
 
-    // Build receipt items
-    const receiptItems = cart.items.map((item) => {
+    const receiptItems = receiptCart.items.map((item) => {
       const unitPrice = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       const itemTotal = unitPrice * quantity;
@@ -121,15 +132,15 @@ const printReceipt = () => {
       `;
     }).join("");
 
-    const calculatedTotal = cart.items.reduce((sum, item) => {
+    const calculatedTotal = receiptCart.items.reduce((sum, item) => {
       const price = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       return sum + price * quantity;
     }, 0);
 
-    const receiptTotal = Number(cart.totalPrice) || calculatedTotal;
+    const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // Write receipt HTML
+    // ✅ Full styling restored
     printDocument.open();
     printDocument.write(`
       <!DOCTYPE html>
@@ -166,18 +177,16 @@ const printReceipt = () => {
     `);
     printDocument.close();
 
-    const printWindow = iframe.contentWindow;
     setTimeout(() => {
+      const printWindow = iframe.contentWindow;
       printWindow?.focus();
       printWindow?.print();
 
-      // ✅ Clear cart items after printing
-      clearItems();
+      // ✅ Close the print window automatically after printing
+      printWindow?.close();
 
       // Remove iframe
-      setTimeout(() => {
-        iframe.parentNode?.removeChild(iframe);
-      }, 2000);
+      setTimeout(() => iframe.remove(), 500);
     }, 500);
 
   } catch (error) {
@@ -185,6 +194,9 @@ const printReceipt = () => {
     alert("Printing failed. Please check printer connection.");
   }
 };
+
+
+
 
 
   // --------------------------------------------------
@@ -572,12 +584,7 @@ const printReceipt = () => {
                 Cancel
               </Button>
 
-              <Button
-                className="bg-green-600 text-white hover:bg-green-700"
-                onClick={printReceipt}
-              >
-                Print Receipt
-              </Button>
+              <Button onClick={printReceipt}>Print Receipt</Button>
 
             </div>
 
@@ -590,3 +597,5 @@ const printReceipt = () => {
     </main>
   );
 }
+
+
