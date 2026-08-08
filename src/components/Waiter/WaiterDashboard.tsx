@@ -65,225 +65,108 @@ export default function WaiterDashboard() {
    * This creates a separate print-only document.
    * Chrome will NOT print the POS page itself.
    */
-  const printReceipt = () => {
-    if (!cart) return;
+const printReceipt = () => {
+  try {
+    const receipt = document.getElementById("thermal-receipt");
 
-    const printWindow = window.open(
-      "",
-      "_blank",
-      "width=400,height=700"
-    );
-
-    if (!printWindow) {
-      alert("Please allow pop-ups for this POS website.");
+    if (!receipt) {
+      alert("Receipt not found.");
       return;
     }
 
-    const itemsHtml = cart.items
-      .map(
-        (item) => `
-          <div class="item">
-            <span>
-              ${item.product.name} x${item.quantity}
-            </span>
+    // Create print styles
+    const style = document.createElement("style");
+    style.id = "thermal-print-styles";
 
-            <span>
-              KES ${item.totalprice}
-            </span>
-          </div>
-        `
-      )
-      .join("");
+    style.innerHTML = `
+      @media print {
+        @page {
+          size: 58mm auto;
+          margin: 0;
+        }
 
-    printWindow.document.open();
+        html,
+        body {
+          width: 58mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+        }
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
+        body {
+          overflow: visible !important;
+        }
 
-          <title>Receipt</title>
+        body > * {
+          display: none !important;
+        }
 
-          <style>
-            @page {
-              size: 58mm auto;
-              margin: 0;
-            }
+        #thermal-receipt {
+          display: block !important;
+          visibility: visible !important;
 
-            * {
-              box-sizing: border-box;
-            }
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
 
-            html,
-            body {
-              width: 58mm;
-              margin: 0;
-              padding: 0;
-              background: white;
-            }
+          width: 58mm !important;
+          max-width: 58mm !important;
 
-            body {
-              font-family: monospace;
-              color: black;
-              font-size: 11px;
-              line-height: 1.25;
-            }
+          margin: 0 !important;
+          padding: 2mm !important;
 
-            .receipt {
-              width: 58mm;
-              max-width: 58mm;
-              margin: 0;
-              padding: 2mm;
+          box-sizing: border-box !important;
 
-              overflow: visible;
+          font-family: monospace !important;
+          font-size: 11px !important;
+          line-height: 1.2 !important;
 
-              page-break-before: avoid;
-              page-break-after: avoid;
-              page-break-inside: avoid;
+          color: #000 !important;
+          background: #fff !important;
 
-              break-before: avoid;
-              break-after: avoid;
-              break-inside: avoid;
-            }
+          page-break-before: avoid !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
 
-            .center {
-              text-align: center;
-            }
+          break-before: avoid !important;
+          break-after: avoid !important;
+          break-inside: avoid !important;
+        }
 
-            .bold {
-              font-weight: bold;
-            }
+        #thermal-receipt * {
+          visibility: visible !important;
+        }
 
-            .title {
-              font-size: 16px;
-              font-weight: bold;
-              margin-bottom: 3px;
-            }
+        .no-print {
+          display: none !important;
+        }
+      }
+    `;
 
-            .small {
-              font-size: 10px;
-            }
+    document.head.appendChild(style);
 
-            .line {
-              border-top: 1px dashed black;
-              margin: 7px 0;
-              width: 100%;
-            }
+    // Print
+    window.print();
 
-            .item {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              width: 100%;
-              gap: 5px;
-              margin-bottom: 4px;
-            }
+    // Remove print CSS after printing
+    setTimeout(() => {
+      const oldStyle = document.getElementById(
+        "thermal-print-styles"
+      );
 
-            .item span:first-child {
-              flex: 1;
-              text-align: left;
-              overflow-wrap: break-word;
-            }
+      if (oldStyle) {
+        oldStyle.remove();
+      }
+    }, 1000);
 
-            .item span:last-child {
-              white-space: nowrap;
-              text-align: right;
-            }
+  } catch (error) {
+    console.error("Printing error:", error);
 
-            .total {
-              display: flex;
-              justify-content: space-between;
-              width: 100%;
-              font-weight: bold;
-              font-size: 12px;
-            }
-
-            .thanks {
-              text-align: center;
-              margin-top: 8px;
-              font-size: 10px;
-            }
-
-            @media print {
-              html,
-              body {
-                width: 58mm;
-                margin: 0;
-                padding: 0;
-              }
-
-              .receipt {
-                width: 58mm;
-                margin: 0;
-                padding: 2mm;
-              }
-            }
-          </style>
-        </head>
-
-        <body>
-
-          <div class="receipt">
-
-            <div class="center">
-              <div class="title">
-                HOTEL POS
-              </div>
-
-              <div>
-                Kapkatet, Kericho
-              </div>
-
-              <div>
-                Tel: 0712 345 678
-              </div>
-            </div>
-
-            <div class="line"></div>
-
-            ${itemsHtml}
-
-            <div class="line"></div>
-
-            <div class="total">
-              <span>TOTAL</span>
-              <span>KES ${cart.totalPrice}</span>
-            </div>
-
-            <div class="line"></div>
-
-            <div class="thanks">
-              Thank you!<br />
-              Welcome again
-            </div>
-
-          </div>
-
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-
-    /*
-     * Wait for the receipt document to render,
-     * then open Chrome's print dialog.
-     */
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-
-        /*
-         * Close the print window after printing.
-         */
-        printWindow.onafterprint = () => {
-          printWindow.close();
-        };
-      }, 300);
-    };
-  };
+    alert(
+      "Printing failed. Please check your printer connection."
+    );
+  }
+};
 
   const handleAddToCart = (product: Product) => {
     if (!cart?.id) return;
