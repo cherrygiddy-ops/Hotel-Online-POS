@@ -59,113 +59,155 @@ export default function WaiterDashboard() {
     setShowReceipt(true);
   };
 
-  /*
-   * PRINT RECEIPT
-   *
-   * This creates a separate print-only document.
-   * Chrome will NOT print the POS page itself.
-   */
+
 const printReceipt = () => {
-  try {
-    const receipt = document.getElementById("thermal-receipt");
-
-    if (!receipt) {
-      alert("Receipt not found.");
-      return;
-    }
-
-    // Create print styles
-    const style = document.createElement("style");
-    style.id = "thermal-print-styles";
-
-    style.innerHTML = `
-      @media print {
-        @page {
-          size: 58mm auto;
-          margin: 0;
-        }
-
-        html,
-        body {
-          width: 58mm !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-        }
-
-        body {
-          overflow: visible !important;
-        }
-
-        body > * {
-          display: none !important;
-        }
-
-        #thermal-receipt {
-          display: block !important;
-          visibility: visible !important;
-
-          position: absolute !important;
-          left: 0 !important;
-          top: 0 !important;
-
-          width: 58mm !important;
-          max-width: 58mm !important;
-
-          margin: 0 !important;
-          padding: 2mm !important;
-
-          box-sizing: border-box !important;
-
-          font-family: monospace !important;
-          font-size: 11px !important;
-          line-height: 1.2 !important;
-
-          color: #000 !important;
-          background: #fff !important;
-
-          page-break-before: avoid !important;
-          page-break-after: avoid !important;
-          page-break-inside: avoid !important;
-
-          break-before: avoid !important;
-          break-after: avoid !important;
-          break-inside: avoid !important;
-        }
-
-        #thermal-receipt * {
-          visibility: visible !important;
-        }
-
-        .no-print {
-          display: none !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-
-    // Print
-    window.print();
-
-    // Remove print CSS after printing
-    setTimeout(() => {
-      const oldStyle = document.getElementById(
-        "thermal-print-styles"
-      );
-
-      if (oldStyle) {
-        oldStyle.remove();
-      }
-    }, 1000);
-
-  } catch (error) {
-    console.error("Printing error:", error);
-
-    alert(
-      "Printing failed. Please check your printer connection."
-    );
+  if (!cart || !cart.items || cart.items.length === 0) {
+    alert("Receipt not found or cart is empty.");
+    return;
   }
+
+  const receiptWindow = window.open("", "_blank", "width=400,height=600");
+
+  if (!receiptWindow) {
+    alert("Please allow pop-ups for this site so the receipt can print.");
+    return;
+  }
+
+  const itemsHtml = cart.items
+    .map(
+      (item) => `
+        <div class="item">
+          <span>${item.product.name} x${item.quantity}</span>
+          <span>KES ${item.totalprice}</span>
+        </div>
+      `
+    )
+    .join("");
+
+  receiptWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Receipt</title>
+
+        <style>
+          @page {
+            size: 58mm 120mm;
+            margin: 0;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          html,
+          body {
+            width: 58mm;
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+
+          body {
+            font-family: monospace;
+            font-size: 11px;
+            line-height: 1.25;
+            color: black;
+          }
+
+          .receipt {
+            width: 58mm;
+            padding: 2mm;
+            margin: 0;
+          }
+
+          .center {
+            text-align: center;
+          }
+
+          .bold {
+            font-weight: bold;
+          }
+
+          .item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 3px;
+          }
+
+          .line {
+            border-top: 1px dashed black;
+            margin: 6px 0;
+          }
+
+          .total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+          }
+
+          @media print {
+            html,
+            body {
+              width: 58mm;
+              margin: 0;
+              padding: 0;
+            }
+
+            .receipt {
+              width: 58mm;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="receipt">
+
+          <div class="center">
+            <div class="bold">HOTEL POS</div>
+            <div>Kapkatet, Kericho</div>
+            <div>Tel: 0712 345 678</div>
+          </div>
+
+          <div class="line"></div>
+
+          ${itemsHtml}
+
+          <div class="line"></div>
+
+          <div class="total">
+            <span>TOTAL</span>
+            <span>KES ${cart.totalPrice}</span>
+          </div>
+
+          <div class="line"></div>
+
+          <div class="center">
+            Thank you!<br>
+            Welcome again
+          </div>
+
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+
+          window.onafterprint = function() {
+            window.close();
+          };
+        </script>
+
+      </body>
+    </html>
+  `);
+
+  receiptWindow.document.close();
 };
 
   const handleAddToCart = (product: Product) => {
