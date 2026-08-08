@@ -89,21 +89,34 @@ const handleCheckout = () => {
 // --------------------------------------------------
 // PRINT RECEIPT (call API + print + clear cart)
 // --------------------------------------------------
-
 const printReceipt = async () => {
-  if (!receiptCart) {
+  if (!cart) {
     alert("Receipt not found.");
     return;
   }
 
   try {
-    // Call checkout endpoint
+    // Call checkout endpoint before printing
     const response: CheckoutResponseDto = await apiClient.checkout({
-      cartId: receiptCart.id,
+      cartId: cart.id,
     });
     console.log("Order placed:", response.orderId);
 
-    const receiptItems = receiptCart.items.map((item) => {
+    // Create hidden iframe
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
+
+    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!printDocument) throw new Error("Unable to create print document.");
+
+    // Build receipt items
+    const receiptItems = cart.items.map((item) => {
       const unitPrice = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       const itemTotal = unitPrice * quantity;
@@ -115,15 +128,17 @@ const printReceipt = async () => {
       `;
     }).join("");
 
-    const calculatedTotal = receiptCart.items.reduce((sum, item) => {
+    const calculatedTotal = cart.items.reduce((sum, item) => {
       const price = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       return sum + price * quantity;
     }, 0);
 
-    const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
+    const receiptTotal = Number(cart.totalPrice) || calculatedTotal;
 
-    const receiptHtml = `
+    // ✅ Write receipt HTML with styles
+    printDocument.open();
+    printDocument.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -155,22 +170,7 @@ const printReceipt = async () => {
           </div>
         </body>
       </html>
-    `;
-
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
-
-    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!printDocument) throw new Error("Unable to create print document.");
-
-    printDocument.open();
-    printDocument.write(receiptHtml);
+    `);
     printDocument.close();
 
     // ✅ Delay to allow rendering before printing
