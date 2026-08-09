@@ -167,8 +167,8 @@ const printReceipt = async () => {
       printWindow?.print();
 
       // Close modal and clear cart
-      setShowReceipt(false);
-     // useCartStore.getState().clearCart();
+      setShowReceipt(true);
+     
 
       // ✅ Call checkout API AFTER printing
       const response: CheckoutResponseDto = await apiClient.checkout({
@@ -177,6 +177,8 @@ const printReceipt = async () => {
       console.log("Order placed:", response.orderId);
 
       printWindow?.close();
+      clearCart();
+      setShowReceipt(true);
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
