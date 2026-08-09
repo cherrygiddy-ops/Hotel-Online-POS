@@ -71,31 +71,13 @@ export default function WaiterDashboard() {
   );
 
 const handleCheckout = async () => {
-  if (!cart?.id) return;
+if (!cart?.id) return;
 
-  try {
-    const response: CheckoutResponseDto = await apiClient.checkout({
-      cartId: cart.id,
-      // paymentMethod and phoneNumber optional
-    });
+  // Save snapshot for preview
+  setReceiptCart({ ...cart });
 
-    console.log("Order placed:", response.orderId);
-
-    // ✅ Save snapshot before clearing
-    setReceiptCart({ ...cart });
-
-    // ✅ Optimistically clear cart in Zustand store
-    useCartStore.getState().clearCart();
-
-    // ✅ Show receipt
-    setShowReceipt(true);
-
-    if (response.stripeCheckoutUrl) {
-      window.location.href = response.stripeCheckoutUrl;
-    }
-  } catch (err) {
-    console.error("Checkout failed:", err);
-  }
+  // Show receipt modal
+  setShowReceipt(true);
 };
 
 // --------------------------------------------------
@@ -185,7 +167,8 @@ const printReceipt = () => {
       // ✅ Close the print window automatically after printing
       printWindow?.close();
 
-      // Remove iframe
+       setShowReceipt(false);
+      useCartStore.getState().clearCart();
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
