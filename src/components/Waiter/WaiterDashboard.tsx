@@ -177,8 +177,6 @@ const printReceipt = async () => {
       console.log("Order placed:", response.orderId);
 
       printWindow?.close();
-      clearCart();
-      setShowReceipt(true);
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
