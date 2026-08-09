@@ -15,6 +15,7 @@ import { CheckoutRequestDto } from "@/entities/CheckoutRequestDto";
 import { CheckoutResponseDto } from "@/entities/CheckoutResponseDto";
 import Cart from "@/entities/Cart";
 import { CartItem } from "@/entities/CartItem";
+import { useCategories } from "@/hooks/useCategories";
 
 declare global {
   interface Window {
@@ -33,6 +34,7 @@ export default function WaiterDashboard() {
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
   const { clearCart } = useCartStore(); 
+  const { data: categories } = useCategories();
 
   const {
     incrementItemCount,
@@ -60,15 +62,16 @@ export default function WaiterDashboard() {
   // --------------------------------------------------
   // GROUP PRODUCTS BY CATEGORY
   // --------------------------------------------------
-  const grouped = productsQuery.data?.reduce(
-    (acc, product) => {
-      const cat = product.categoryId;
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(product);
-      return acc;
-    },
-    {} as Record<string, typeof productsQuery.data>
-  );
+const grouped = productsQuery.data?.reduce((acc, product) => {
+  const catName =
+    categories?.find((c) => c.id === product.categoryId)?.name ||
+    product.categoryId; // fallback to ID if not found
+
+  if (!acc[catName]) acc[catName] = [];
+  acc[catName].push(product);
+  return acc;
+}, {} as Record<string, typeof productsQuery.data>);
+
 
 const handleCheckout = async () => {
 if (!cart?.id) return;
@@ -324,7 +327,7 @@ const printReceipt = async () => {
                 >
 
                   <h2 className="text-lg font-semibold mb-3">
-                    Category {category}
+                    {category}
                   </h2>
 
                   <div className="flex flex-col gap-3">

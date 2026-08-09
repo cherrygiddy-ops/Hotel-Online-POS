@@ -164,6 +164,27 @@ class APICLIENT<TRequest, TResponse> {
     return res.data;
   };
 
+getAllCategories = () => {
+  return axiosInstance
+    .get<TResponse[]>(`${this.endpoint}/categories`)
+    .then((res) => res.data);
+};
+
+// ✅ Add a new category (raw string body)
+addCategory = (request: TRequest) => {
+  return axiosInstance
+    .post<TResponse>(
+      `${this.endpoint}/categories`,
+      String(request), // force plain string
+      {
+        headers: { "Content-Type": "text/plain" },
+        transformRequest: [(data) => data], // 👈 prevents Axios from encoding
+      }
+    )
+    .then((res) => res.data);
+};
+
+
 }
 
 export default APICLIENT;

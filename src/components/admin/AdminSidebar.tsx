@@ -13,25 +13,21 @@ import {
 import { NavLink } from "@/components/NavLink";
 import {
   BarChart3,
-  BookOpen,
-  DollarSign,
   LayoutDashboard,
   LogOut,
   Users,
-  Activity,
   Settings,
   ClipboardList,
   CreditCard,
   Package,
-  Receipt,
+  Tags,
 } from "lucide-react";
 
 const adminLinks = [
   { title: "Dashboard", url: "/adminHome", icon: LayoutDashboard },
-  { title: "Orders", url: "/admin/orders", icon: ClipboardList },
   { title: "Reports", url: "/admin/analytics", icon: BarChart3 },
   { title: "Inventory", url: "/admin/inventory", icon: Package },
-  { title: "Receipts", url: "/admin/receipts", icon: Receipt },
+  { title: "categories", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
   { title: "Staff", url: "/admin/staff", icon: Users },
   { title: "Settings", url: "/admin/settings", icon: Settings },

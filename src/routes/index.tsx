@@ -12,6 +12,7 @@ import AdminOrderDashboard from "@/components/admin/AdminOrderDashboard";
 import AdminAnalyticsDashboard from "@/components/admin/AdminAnalyticsDashboard";
 import AdminProductsPage from "@/components/admin/AdminProductsPage";
 import WaiterDashboard from "@/components/Waiter/WaiterDashboard";
+import CategoriesCrud from "@/components/admin/CategoriesCrud";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: "admin/orders", element: <AdminOrderDashboard /> },
       { path: "admin/analytics", element: <AdminAnalyticsDashboard /> },
       { path: "admin/inventory", element: <AdminProductsPage /> },
+      { path: "admin/categories", element: <CategoriesCrud /> },
     ],
   },
   {
