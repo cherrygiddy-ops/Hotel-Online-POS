@@ -168,7 +168,7 @@ const printReceipt = async () => {
 
       // Close modal and clear cart
       setShowReceipt(true);
-      useCartStore.getState().clearCart();
+     // useCartStore.getState().clearCart();
 
       // ✅ Call checkout API AFTER printing
       const response: CheckoutResponseDto = await apiClient.checkout({
