@@ -167,7 +167,7 @@ const printReceipt = async () => {
       printWindow?.print();
 
       // Close modal and clear cart
-      setShowReceipt(false);
+      setShowReceipt(true);
       useCartStore.getState().clearCart();
 
       // ✅ Call checkout API AFTER printing
