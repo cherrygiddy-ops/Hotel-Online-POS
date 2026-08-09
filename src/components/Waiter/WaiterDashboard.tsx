@@ -90,11 +90,7 @@ const printReceipt = async () => {
   }
 
   try {
-    // ✅ Checkout API call happens here
-    const response: CheckoutResponseDto = await apiClient.checkout({
-      cartId: receiptCart.id,
-    });
-    console.log("Order placed:", response.orderId);
+    // Build hidden iframe
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.width = "1px";
@@ -107,6 +103,7 @@ const printReceipt = async () => {
     const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
     if (!printDocument) throw new Error("Unable to create print document.");
 
+    // Build receipt items
     const receiptItems = receiptCart.items.map((item) => {
       const unitPrice = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
@@ -127,7 +124,7 @@ const printReceipt = async () => {
 
     const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // ✅ Full styling restored
+    // Write receipt HTML
     printDocument.open();
     printDocument.write(`
       <!DOCTYPE html>
@@ -163,18 +160,23 @@ const printReceipt = async () => {
     `);
     printDocument.close();
 
-    setTimeout(() => {
+    // ✅ Make the timeout callback async
+    setTimeout(async () => {
       const printWindow = iframe.contentWindow;
       printWindow?.focus();
       printWindow?.print();
 
-      // ✅ Close the print window automatically after printing
-      
-       setShowReceipt(true);
+      // Close modal and clear cart
+      setShowReceipt(false);
       useCartStore.getState().clearCart();
-      printWindow?.close();
-      
 
+      // ✅ Call checkout API AFTER printing
+      const response: CheckoutResponseDto = await apiClient.checkout({
+        cartId: receiptCart.id,
+      });
+      console.log("Order placed:", response.orderId);
+
+      printWindow?.close();
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
@@ -183,6 +185,7 @@ const printReceipt = async () => {
     alert("Printing failed. Please check printer connection.");
   }
 };
+
 
 
 
