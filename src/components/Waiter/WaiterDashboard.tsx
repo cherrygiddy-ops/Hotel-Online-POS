@@ -83,13 +83,18 @@ if (!cart?.id) return;
 // --------------------------------------------------
 // PRINT RECEIPT
 // --------------------------------------------------
-const printReceipt = () => {
+const printReceipt = async () => {
   if (!receiptCart) {
     alert("Receipt not found.");
     return;
   }
 
   try {
+    // ✅ Checkout API call happens here
+    const response: CheckoutResponseDto = await apiClient.checkout({
+      cartId: receiptCart.id,
+    });
+    console.log("Order placed:", response.orderId);
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.width = "1px";
@@ -144,8 +149,7 @@ const printReceipt = () => {
           <div class="receipt">
             <div style="text-align:center;">
               <div style="font-weight:bold;">HOTEL POS</div>
-              <div>Kapkatet, Kericho</div>
-              <div>Tel: 0712 345 678</div>
+              <div>Steak House Hotel</div>
             </div>
             <div class="line"></div>
             ${receiptItems}
@@ -490,12 +494,10 @@ const printReceipt = () => {
                 </h2>
 
                 <p>
-                  Kapkatet, Kericho
+                 Steak House Hotel
                 </p>
 
-                <p>
-                  Tel: 0712 345 678
-                </p>
+            
 
               </div>
 
