@@ -166,7 +166,7 @@ const printReceipt = () => {
 
       // ✅ Close the print window automatically after printing
       
-       setShowReceipt(false);
+       setShowReceipt(true);
       useCartStore.getState().clearCart();
       printWindow?.close();
 
