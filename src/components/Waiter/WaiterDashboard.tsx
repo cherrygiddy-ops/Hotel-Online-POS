@@ -165,10 +165,11 @@ const printReceipt = () => {
       printWindow?.print();
 
       // ✅ Close the print window automatically after printing
+      
+       setShowReceipt(false);
+      useCartStore.getState().clearCart();
       printWindow?.close();
 
-       setShowReceipt(false);
-      //useCartStore.getState().clearCart();
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
