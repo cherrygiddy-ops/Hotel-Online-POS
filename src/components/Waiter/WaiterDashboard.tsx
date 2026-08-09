@@ -70,40 +70,57 @@ export default function WaiterDashboard() {
     {} as Record<string, typeof productsQuery.data>
   );
 
-  // --------------------------------------------------
-// CHECKOUT
-// --------------------------------------------------
-// --------------------------------------------------
-// CHECKOUT (just open modal, no API call)
-// --------------------------------------------------
-const handleCheckout = () => {
+const handleCheckout = async () => {
   if (!cart?.id) return;
 
-  // Save snapshot for preview
-  setReceiptCart({ ...cart });
+  try {
+    const response: CheckoutResponseDto = await apiClient.checkout({
+      cartId: cart.id,
+      // paymentMethod and phoneNumber optional
+    });
 
-  // Show receipt modal
-  setShowReceipt(true);
+    console.log("Order placed:", response.orderId);
+
+    // ✅ Save snapshot before clearing
+    setReceiptCart({ ...cart });
+
+    // ✅ Optimistically clear cart in Zustand store
+    useCartStore.getState().clearCart();
+
+    // ✅ Show receipt
+    setShowReceipt(true);
+
+    if (response.stripeCheckoutUrl) {
+      window.location.href = response.stripeCheckoutUrl;
+    }
+  } catch (err) {
+    console.error("Checkout failed:", err);
+  }
 };
 
 // --------------------------------------------------
-// PRINT RECEIPT (call API + print + clear cart)
+// PRINT RECEIPT
 // --------------------------------------------------
-const printReceipt = async () => {
-  if (!cart) {
+const printReceipt = () => {
+  if (!receiptCart) {
     alert("Receipt not found.");
     return;
   }
 
   try {
-    // Call checkout endpoint before printing
-    const response: CheckoutResponseDto = await apiClient.checkout({
-      cartId: cart.id,
-    });
-    console.log("Order placed:", response.orderId);
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
 
-    // Build receipt items
-    const receiptItems = cart.items.map((item) => {
+    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!printDocument) throw new Error("Unable to create print document.");
+
+    const receiptItems = receiptCart.items.map((item) => {
       const unitPrice = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       const itemTotal = unitPrice * quantity;
@@ -115,16 +132,17 @@ const printReceipt = async () => {
       `;
     }).join("");
 
-    const calculatedTotal = cart.items.reduce((sum, item) => {
+    const calculatedTotal = receiptCart.items.reduce((sum, item) => {
       const price = Number(item.product.price) || 0;
       const quantity = Number(item.quantity) || 0;
       return sum + price * quantity;
     }, 0);
 
-    const receiptTotal = Number(cart.totalPrice) || calculatedTotal;
+    const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // ✅ Minimal HTML with inline CSS
-    const receiptHtml = `
+    // ✅ Full styling restored
+    printDocument.open();
+    printDocument.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -156,52 +174,26 @@ const printReceipt = async () => {
           </div>
         </body>
       </html>
-    `;
+    `);
+    printDocument.close();
 
-    // Create hidden iframe
-const iframe = document.createElement("iframe");
-iframe.style.position = "fixed";
-iframe.style.width = "1px";
-iframe.style.height = "1px";
-iframe.style.border = "0";
-iframe.style.opacity = "0";
-iframe.style.pointerEvents = "none";
-document.body.appendChild(iframe);
+    setTimeout(() => {
+      const printWindow = iframe.contentWindow;
+      printWindow?.focus();
+      printWindow?.print();
 
-// Get iframe document
-const printDocument =
-  iframe.contentDocument || iframe.contentWindow?.document;
+      // ✅ Close the print window automatically after printing
+      printWindow?.close();
 
-if (!printDocument) {
-  throw new Error("Unable to create print document.");
-}
-
-// Write receipt HTML
-printDocument.open();
-printDocument.write(receiptHtml);
-printDocument.close();
-
-// IMPORTANT: use timeout, not iframe.onload
-setTimeout(() => {
-  iframe.contentWindow?.focus();
-  iframe.contentWindow?.print();
-
-  setShowReceipt(false);
-  useCartStore.getState().clearCart();
-
-  setTimeout(() => {
-    iframe.parentNode?.removeChild(iframe);
-  }, 2000);
-}, 800);
-
+      // Remove iframe
+      setTimeout(() => iframe.remove(), 500);
+    }, 500);
 
   } catch (error) {
     console.error("Printing error:", error);
     alert("Printing failed. Please check printer connection.");
   }
 };
-
-
 
 
 
