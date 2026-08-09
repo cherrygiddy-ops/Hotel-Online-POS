@@ -168,7 +168,7 @@ const printReceipt = () => {
       printWindow?.close();
 
        setShowReceipt(false);
-      useCartStore.getState().clearCart();
+      //useCartStore.getState().clearCart();
       setTimeout(() => iframe.remove(), 500);
     }, 500);
 
