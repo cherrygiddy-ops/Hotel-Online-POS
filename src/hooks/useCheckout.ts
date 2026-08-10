@@ -1,26 +1,21 @@
-import { axiosInstance } from "@/services/ApiClient";
 import { useToast } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-
-type CheckoutPayload = {
-  cartId?: string;
-  paymentMethod: "PayBill" | "Stripe" | "STKPush";
-  phoneNumber?: string; // ✅ now allowed in backend DTO
-};
+import CheckoutService from "@/services/CheckoutService";
+import { CheckoutRequestDto } from "@/entities/CheckoutRequestDto";
+import { CheckoutResponseDto } from "@/entities/CheckoutResponseDto";
 
 const useCheckout = () => {
   const toast = useToast();
   const navigate = useNavigate();
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (payload: CheckoutPayload) => {
-      // ✅ send phoneNumber along with cartId + paymentMethod
-      const response = await axiosInstance.post("/auth/checkout", payload);
-      return response.data;
+  return useMutation<CheckoutResponseDto, Error, CheckoutRequestDto>({
+    mutationFn: async (payload: CheckoutRequestDto) => {
+      // ✅ delegate to CheckoutService
+      return await CheckoutService.checkout(payload);
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data) => {
       toast({
         title: "Order Confirmed 🎉",
         description: `Order #${data.orderId} placed successfully.`,
@@ -29,7 +24,7 @@ const useCheckout = () => {
         isClosable: true,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-
+      // optional: navigate("/cashier");
     },
     onError: (error: any) => {
       toast({

@@ -27,6 +27,7 @@ declare global {
 
 export default function WaiterDashboard() {
   const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>("/auth/checkout");
+  const [receiptOrder, setReceiptOrder] = useState<CheckoutResponseDto | null>(null);
   const { productsQuery } = useProducts();
   const { data: cart, isLoading } = useCart();
 
@@ -93,6 +94,13 @@ const printReceipt = async () => {
   }
 
   try {
+    
+      // ✅ Call checkout API AFTER printing
+      const response: CheckoutResponseDto = await apiClient.checkout({
+        cartId: receiptCart.id,
+      });
+      setReceiptOrder(response);
+      console.log("Order placed:", response.orderId);
     // Build hidden iframe
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -150,6 +158,7 @@ const printReceipt = async () => {
             <div style="text-align:center;">
               <div style="font-weight:bold;">HOTEL POS</div>
               <div>Steak House Hotel</div>
+              <div>Receipt No: ${response.orderId}</div>
             </div>
             <div class="line"></div>
             ${receiptItems}
@@ -173,11 +182,6 @@ const printReceipt = async () => {
       setShowReceipt(true);
      
 
-      // ✅ Call checkout API AFTER printing
-      const response: CheckoutResponseDto = await apiClient.checkout({
-        cartId: receiptCart.id,
-      });
-      console.log("Order placed:", response.orderId);
 
       printWindow?.close();
       setTimeout(() => iframe.remove(), 500);
@@ -502,7 +506,9 @@ const printReceipt = async () => {
                 <p>
                  Steak House Hotel
                 </p>
-
+{receiptOrder && (
+                  <p className="text-xs">Receipt No: {receiptOrder.orderId}</p>
+                )}
             
 
               </div>
