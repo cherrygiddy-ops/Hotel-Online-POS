@@ -26,15 +26,22 @@ declare global {
 }
 
 export default function WaiterDashboard() {
-  const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>("/auth/checkout");
-  const [receiptOrder, setReceiptOrder] = useState<CheckoutResponseDto | null>(null);
+  const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>(
+    "/auth/checkout",
+  );
+  const [receiptOrder, setReceiptOrder] = useState<CheckoutResponseDto | null>(
+    null,
+  );
+  const [waiterName, setWaiterName] = useState("");
+  const [askWaiterName, setAskWaiterName] = useState(false);
   const { productsQuery } = useProducts();
   const { data: cart, isLoading } = useCart();
+  
 
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
-  const { clearCart } = useCartStore(); 
+  const { clearCart } = useCartStore();
   const { data: categories } = useCategories();
 
   const {
@@ -63,81 +70,94 @@ export default function WaiterDashboard() {
   // --------------------------------------------------
   // GROUP PRODUCTS BY CATEGORY
   // --------------------------------------------------
-const grouped = productsQuery.data?.reduce((acc, product) => {
-  const catName =
-    categories?.find((c) => c.id === product.categoryId)?.name ||
-    product.categoryId; // fallback to ID if not found
+  const grouped = productsQuery.data?.reduce(
+    (acc, product) => {
+      const catName =
+        categories?.find((c) => c.id === product.categoryId)?.name ||
+        product.categoryId; // fallback to ID if not found
 
-  if (!acc[catName]) acc[catName] = [];
-  acc[catName].push(product);
-  return acc;
-}, {} as Record<string, typeof productsQuery.data>);
+      if (!acc[catName]) acc[catName] = [];
+      acc[catName].push(product);
+      return acc;
+    },
+    {} as Record<string, typeof productsQuery.data>,
+  );
 
-
-const handleCheckout = async () => {
-if (!cart?.id) return;
-
+  const handleCheckout = async () => {
+    if (!cart?.id) return;
+     
+    setAskWaiterName(true);
+    // Save snapshot for preview
+   
+  };
+const confirmWaiterName = () => {
+  if (!waiterName) {
+    alert("Please enter waiter name");
+    return;
+  }
   // Save snapshot for preview
   setReceiptCart({ ...cart });
-
-  // Show receipt modal
+  // ✅ don’t mutate CheckoutResponseDto, just store waiterName separately
+  setAskWaiterName(false);
   setShowReceipt(true);
 };
 
-// --------------------------------------------------
-// PRINT RECEIPT
-// --------------------------------------------------
-const printReceipt = async () => {
-  if (!receiptCart) {
-    alert("Receipt not found.");
-    return;
-  }
+  // --------------------------------------------------
+  // PRINT RECEIPT
+  // --------------------------------------------------
+  const printReceipt = async () => {
+    if (!receiptCart) {
+      alert("Receipt not found.");
+      return;
+    }
 
-  try {
-    
+    try {
       // ✅ Call checkout API AFTER printing
       const response: CheckoutResponseDto = await apiClient.checkout({
         cartId: receiptCart.id,
       });
       setReceiptOrder(response);
       console.log("Order placed:", response.orderId);
-    // Build hidden iframe
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
+      // Build hidden iframe
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.width = "1px";
+      iframe.style.height = "1px";
+      iframe.style.border = "0";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+      document.body.appendChild(iframe);
 
-    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!printDocument) throw new Error("Unable to create print document.");
+      const printDocument =
+        iframe.contentDocument || iframe.contentWindow?.document;
+      if (!printDocument) throw new Error("Unable to create print document.");
 
-    // Build receipt items
-    const receiptItems = receiptCart.items.map((item) => {
-      const unitPrice = Number(item.product.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      const itemTotal = unitPrice * quantity;
-      return `
+      // Build receipt items
+      const receiptItems = receiptCart.items
+        .map((item) => {
+          const unitPrice = Number(item.product.price) || 0;
+          const quantity = Number(item.quantity) || 0;
+          const itemTotal = unitPrice * quantity;
+          return `
         <div class="item">
           <span class="item-name">${item.product.name} x${quantity}</span>
           <span class="item-price">KES ${itemTotal.toFixed(2)}</span>
         </div>
       `;
-    }).join("");
+        })
+        .join("");
 
-    const calculatedTotal = receiptCart.items.reduce((sum, item) => {
-      const price = Number(item.product.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      return sum + price * quantity;
-    }, 0);
+      const calculatedTotal = receiptCart.items.reduce((sum, item) => {
+        const price = Number(item.product.price) || 0;
+        const quantity = Number(item.quantity) || 0;
+        return sum + price * quantity;
+      }, 0);
 
-    const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
+      const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
 
-    // Write receipt HTML
-    printDocument.open();
-    printDocument.write(`
+      // Write receipt HTML
+      printDocument.open();
+      printDocument.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -156,9 +176,10 @@ const printReceipt = async () => {
         <body>
           <div class="receipt">
             <div style="text-align:center;">
-              <div style="font-weight:bold;">HOTEL POS</div>
+              <div style="font-weight:bold;">Customer Copy</div>
               <div>Steak House Hotel</div>
               <div>Receipt No: ${response.orderId}</div>
+              <div>Waiter: ${waiterName}</div>
             </div>
             <div class="line"></div>
             ${receiptItems}
@@ -170,33 +191,25 @@ const printReceipt = async () => {
         </body>
       </html>
     `);
-    printDocument.close();
+      printDocument.close();
 
-    // ✅ Make the timeout callback async
-    setTimeout(async () => {
-      const printWindow = iframe.contentWindow;
-      printWindow?.focus();
-      printWindow?.print();
+      // ✅ Make the timeout callback async
+      setTimeout(async () => {
+        const printWindow = iframe.contentWindow;
+        printWindow?.focus();
+        printWindow?.print();
 
-      // Close modal and clear cart
-      setShowReceipt(true);
-     
+        // Close modal and clear cart
+        setShowReceipt(true);
 
-
-      printWindow?.close();
-      setTimeout(() => iframe.remove(), 500);
-    }, 500);
-
-  } catch (error) {
-    console.error("Printing error:", error);
-    alert("Printing failed. Please check printer connection.");
-  }
-};
-
-
-
-
-
+        printWindow?.close();
+        setTimeout(() => iframe.remove(), 500);
+      }, 500);
+    } catch (error) {
+      console.error("Printing error:", error);
+      alert("Printing failed. Please check printer connection.");
+    }
+  };
 
   // --------------------------------------------------
   // ADD TO CART
@@ -215,10 +228,7 @@ const printReceipt = async () => {
   // INCREASE
   // --------------------------------------------------
 
-  const handleIncrease = (
-    productId: string,
-    qty: number
-  ) => {
+  const handleIncrease = (productId: string, qty: number) => {
     if (!cart?.id) return;
 
     updateItem.mutate({
@@ -234,10 +244,7 @@ const printReceipt = async () => {
   // DECREASE
   // --------------------------------------------------
 
-  const handleDecrease = (
-    productId: string,
-    qty: number
-  ) => {
+  const handleDecrease = (productId: string, qty: number) => {
     if (!cart?.id) return;
 
     if (qty <= 1) {
@@ -257,10 +264,7 @@ const printReceipt = async () => {
   // REMOVE
   // --------------------------------------------------
 
-  const handleRemove = (
-    productId: string,
-    qty: number
-  ) => {
+  const handleRemove = (productId: string, qty: number) => {
     if (!cart?.id) return;
 
     deleteItem.mutate({
@@ -277,10 +281,7 @@ const printReceipt = async () => {
 
   return (
     <main className="max-w-5xl mx-auto p-4">
-
-      <h1 className="text-2xl font-bold mb-4">
-        Hotel POS Menu
-      </h1>
+      <h1 className="text-2xl font-bold mb-4">Hotel POS Menu</h1>
 
       {/* SEARCH */}
 
@@ -288,136 +289,93 @@ const printReceipt = async () => {
         type="text"
         placeholder="Search items..."
         value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
+        onChange={(e) => setSearch(e.target.value)}
         className="mb-6 h-11"
       />
 
       {/* PRODUCTS */}
 
       <div className="space-y-6">
-
         {grouped &&
-          Object.entries(grouped).map(
-            ([category, items], idx) => {
+          Object.entries(grouped).map(([category, items], idx) => {
+            const filtered = items.filter((item) =>
+              item.name.toLowerCase().includes(search.toLowerCase()),
+            );
 
-              const filtered = items.filter(
-                (item) =>
-                  item.name
-                    .toLowerCase()
-                    .includes(search.toLowerCase())
-              );
-
-              if (filtered.length === 0) {
-                return null;
-              }
-
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{
-                    opacity: 0,
-                    y: 10,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  transition={{
-                    duration: 0.3,
-                  }}
-                  className="rounded-lg border border-gray-200 p-4 bg-white shadow"
-                >
-
-                  <h2 className="text-lg font-semibold mb-3">
-                    {category}
-                  </h2>
-
-                  <div className="flex flex-col gap-3">
-
-                    {filtered.map((item) => (
-
-                      <Button
-                        key={item.id}
-                        variant="outline"
-                        className="w-full h-12 text-sm font-medium"
-                        onClick={() =>
-                          handleAddToCart(item)
-                        }
-                      >
-                        {item.name} – Kes {item.price}
-                      </Button>
-
-                    ))}
-
-                  </div>
-
-                </motion.div>
-              );
+            if (filtered.length === 0) {
+              return null;
             }
-          )}
 
+            return (
+              <motion.div
+                key={idx}
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.3,
+                }}
+                className="rounded-lg border border-gray-200 p-4 bg-white shadow"
+              >
+                <h2 className="text-lg font-semibold mb-3">{category}</h2>
+
+                <div className="flex flex-col gap-3">
+                  {filtered.map((item) => (
+                    <Button
+                      key={item.id}
+                      variant="outline"
+                      className="w-full h-12 text-sm font-medium"
+                      onClick={() => handleAddToCart(item)}
+                    >
+                      {item.name} – Kes {item.price}
+                    </Button>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
       </div>
 
       {/* CART */}
 
       <div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
-
         <div className="bg-white border-t border-gray-300 p-6 h-64 shadow-lg flex flex-col w-full max-w-5xl">
-
-          <h2 className="text-base font-bold mb-3">
-            🛒 Checkout List
-          </h2>
+          <h2 className="text-base font-bold mb-3">🛒 Checkout List</h2>
 
           <div className="flex-1 overflow-y-auto space-y-3">
-
             {cart?.items?.length === 0 ? (
-
-              <p className="text-sm text-gray-500">
-                No items yet
-              </p>
-
+              <p className="text-sm text-gray-500">No items yet</p>
             ) : (
-
               cart?.items?.map((item) => (
-
                 <div
                   key={item.product.id}
                   className="flex justify-between items-center text-sm bg-gray-100 rounded px-3 py-2"
                 >
-
-                  <span className="font-medium">
-                    {item.product.name}
-                  </span>
+                  <span className="font-medium">{item.product.name}</span>
 
                   <div className="flex items-center gap-2">
-
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        handleDecrease(
-                          item.product.id,
-                          item.quantity
-                        )
+                        handleDecrease(item.product.id, item.quantity)
                       }
                     >
                       –
                     </Button>
 
-                    <span className="font-bold">
-                      {item.quantity}
-                    </span>
+                    <span className="font-bold">{item.quantity}</span>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        handleIncrease(
-                          item.product.id,
-                          item.quantity
-                        )
+                        handleIncrease(item.product.id, item.quantity)
                       }
                     >
                       +
@@ -427,60 +385,60 @@ const printReceipt = async () => {
                       variant="destructive"
                       size="sm"
                       onClick={() =>
-                        handleRemove(
-                          item.product.id,
-                          item.quantity
-                        )
+                        handleRemove(item.product.id, item.quantity)
                       }
                     >
                       Remove
                     </Button>
-
                   </div>
-
                 </div>
-
               ))
-
             )}
-
           </div>
 
           {/* TOTAL */}
 
           <div className="mt-3 flex justify-between items-center border-t border-gray-200 pt-3">
-
             <span className="text-sm font-semibold">
               Total Items:{" "}
-              {cart?.items?.reduce(
-                (sum, i) =>
-                  sum + i.quantity,
-                0
-              )}
+              {cart?.items?.reduce((sum, i) => sum + i.quantity, 0)}
             </span>
 
             <span className="text-sm font-semibold">
-              Total Amount: Kes{" "}
-              {cart?.totalPrice ?? 0}
+              Total Amount: Kes {cart?.totalPrice ?? 0}
             </span>
 
             <Button
               className="h-10 px-6 bg-green-600 text-white hover:bg-green-700"
               onClick={handleCheckout}
-              disabled={
-                checkoutMutation.isPending
-              }
+              disabled={checkoutMutation.isPending}
             >
-              {checkoutMutation.isPending
-                ? "Processing..."
-                : "Checkout"}
+              {checkoutMutation.isPending ? "Processing..." : "Checkout"}
             </Button>
-
           </div>
-
         </div>
-
       </div>
+
+
+      {askWaiterName && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+    <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
+      <h3 className="font-bold mb-3">Enter Waiter Name</h3>
+      <Input
+        placeholder="Waiter name"
+        value={waiterName}
+        onChange={(e) => setWaiterName(e.target.value)}
+      />
+      <div className="mt-4 flex justify-center gap-3">
+        <Button variant="outline" onClick={() => setAskWaiterName(false)}>
+          Cancel
+        </Button>
+        <Button onClick={confirmWaiterName}>Confirm</Button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* ==================================================
           RECEIPT PREVIEW
@@ -488,56 +446,38 @@ const printReceipt = async () => {
           ================================================== */}
 
       {showReceipt && cart && (
-
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-
           <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
-
             {/* RECEIPT PREVIEW */}
 
             <div className="bg-white">
-
               <div className="text-center">
+                <h2 className="font-bold text-lg">Customer Copy</h2>
 
-                <h2 className="font-bold text-lg">
-                  HOTEL POS
-                </h2>
-
-                <p>
-                 Steak House Hotel
-                </p>
-{receiptOrder && (
+                <p>Steak House Hotel</p>
+                {receiptOrder && (
                   <p className="text-xs">Receipt No: {receiptOrder.orderId}</p>
                 )}
-            
-
+                <p className="text-xs">Waiter: {waiterName}</p>
               </div>
 
               <hr className="my-2 border-dashed" />
 
               {cart.items.map((item) => {
+                const unitPrice = Number(item.product.price) || 0;
 
-                const unitPrice =
-                  Number(item.product.price) || 0;
-
-                const itemTotal =
-                  unitPrice * item.quantity;
+                const itemTotal = unitPrice * item.quantity;
 
                 return (
                   <div
                     key={item.product.id}
                     className="flex justify-between text-sm mb-1"
                   >
-
                     <span>
-                      {item.product.name} x
-                      {item.quantity}
+                      {item.product.name} x{item.quantity}
                     </span>
 
-                    <span>
-                      KES {itemTotal.toFixed(2)}
-                    </span>
-
+                    <span>KES {itemTotal.toFixed(2)}</span>
                   </div>
                 );
               })}
@@ -545,56 +485,32 @@ const printReceipt = async () => {
               <hr className="my-2 border-dashed" />
 
               <div className="flex justify-between font-bold">
+                <span>TOTAL</span>
 
-                <span>
-                  TOTAL
-                </span>
-
-                <span>
-                  KES {(
-                    Number(cart.totalPrice) || 0
-                  ).toFixed(2)}
-                </span>
-
+                <span>KES {(Number(cart.totalPrice) || 0).toFixed(2)}</span>
               </div>
 
               <hr className="my-2 border-dashed" />
 
               <div className="text-center text-xs mt-3">
-
                 Thank you!
                 <br />
                 Welcome again 🌟
-
               </div>
-
             </div>
 
             {/* SCREEN BUTTONS */}
 
             <div className="mt-4 flex justify-center gap-3">
-
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setShowReceipt(false)
-                }
-              >
+              <Button variant="outline" onClick={() => setShowReceipt(false)}>
                 Cancel
               </Button>
 
               <Button onClick={printReceipt}>Print Receipt</Button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </main>
   );
 }
-
-

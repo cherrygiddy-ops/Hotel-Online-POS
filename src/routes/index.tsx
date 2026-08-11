@@ -13,6 +13,8 @@ import AdminAnalyticsDashboard from "@/components/admin/AdminAnalyticsDashboard"
 import AdminProductsPage from "@/components/admin/AdminProductsPage";
 import WaiterDashboard from "@/components/Waiter/WaiterDashboard";
 import CategoriesCrud from "@/components/admin/CategoriesCrud";
+import WaiterReceiptsManager from "@/components/Waiter/WaiterReceiptsManager";
+import DebtorsManager from "@/components/admin/DebtorsManager";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +35,7 @@ const router = createBrowserRouter([
       { path: "admin/analytics", element: <AdminAnalyticsDashboard /> },
       { path: "admin/inventory", element: <AdminProductsPage /> },
       { path: "admin/categories", element: <CategoriesCrud /> },
+      { path: "admin/debtors", element: <DebtorsManager /> },
     ],
   },
   {
@@ -40,6 +43,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { path: "waiter", element: <WaiterDashboard /> },
+      { path: "waiter/manage", element: <WaiterReceiptsManager /> },
     ],
   },
 ]);

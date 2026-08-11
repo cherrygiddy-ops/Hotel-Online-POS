@@ -27,11 +27,13 @@ const adminLinks = [
   { title: "Dashboard", url: "/adminHome", icon: LayoutDashboard },
   { title: "Reports", url: "/admin/analytics", icon: BarChart3 },
   { title: "Inventory", url: "/admin/inventory", icon: Package },
-  { title: "categories", url: "/admin/categories", icon: Tags },
+  { title: "Categories", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
+  { title: "Debtors", url: "/admin/debtors", icon: ClipboardList }, 
   { title: "Staff", url: "/admin/staff", icon: Users },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
+
 
 export function AdminSidebar() {
   const navigate = useNavigate();

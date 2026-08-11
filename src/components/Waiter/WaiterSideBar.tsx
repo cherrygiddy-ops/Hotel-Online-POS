@@ -22,6 +22,7 @@ import {
 
 const publisherLinks = [
   { title: "Dashboard", url: "/waiter", icon: LayoutDashboard },
+  { title: "Manage Receipt", url: "/waiter/manage", icon:Receipt },
 ];
 
 export function WaiterSideBar() {
