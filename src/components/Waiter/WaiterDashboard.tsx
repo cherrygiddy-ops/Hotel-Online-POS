@@ -179,7 +179,7 @@ const confirmWaiterName = () => {
               <div style="font-weight:bold;">Customer Copy</div>
               <div>Steak House Hotel</div>
               <div>Receipt No: ${response.orderId}</div>
-              <div>Waiter: ${waiterName}</div>
+              <div>Served By: ${waiterName}</div>
             </div>
             <div class="line"></div>
             ${receiptItems}
