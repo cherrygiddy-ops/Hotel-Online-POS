@@ -458,7 +458,7 @@ const confirmWaiterName = () => {
                 {receiptOrder && (
                   <p className="text-xs">Receipt No: {receiptOrder.orderId}</p>
                 )}
-                <p className="text-xs">Waiter: {waiterName}</p>
+                <p className="text-xs">Served By: {waiterName}</p>
               </div>
 
               <hr className="my-2 border-dashed" />
