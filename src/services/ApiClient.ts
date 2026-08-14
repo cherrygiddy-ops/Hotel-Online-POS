@@ -144,6 +144,11 @@ class APICLIENT<TRequest, TResponse> {
       .get<TResponse[]>(this.endpoint)
       .then((res) => res.data);
   };
+    searchOrderById = (orderId: number | string) => {
+    return axiosInstance
+      .get<TResponse>(`${this.endpoint}/${orderId}`)
+      .then((res) => res.data);
+  };
 
   markOrderAsPaid = async (orderId: number) => {
     const res = await axiosInstance.put(`/auth/checkout/${orderId}/status/paid`);
