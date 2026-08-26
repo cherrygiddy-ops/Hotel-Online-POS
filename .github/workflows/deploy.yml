@@ -12,6 +12,9 @@ jobs:
       - name: Checkout application code
         uses: actions/checkout@v4
 
+      - name: Create .env.production
+        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" > .env.production
+
       - name: Log in to GHCR
         run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u cherrygiddy-ops --password-stdin
 
