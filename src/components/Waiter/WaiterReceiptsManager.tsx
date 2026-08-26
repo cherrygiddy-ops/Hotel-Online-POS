@@ -263,13 +263,13 @@ export default function WaiterReceiptsManager() {
       </html>
     `);
 
-    printWindow.document.close();
+    printWindow.document.open();
 
     // Give browser time to render before printing
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
-      printWindow.close();
+      printWindow.open();
     }, 300);
   };
 
