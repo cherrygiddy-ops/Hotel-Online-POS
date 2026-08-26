@@ -45,7 +45,7 @@ export function WaiterSideBar() {
             <BookOpen className="h-5 w-5 text-sidebar-primary" />
           </div>
           <div>
-            <h1 className="font-heading text-base font-semibold text-sidebar-accent-foreground">LoHo</h1>
+            <h1 className="font-heading text-base font-semibold text-sidebar-accent-foreground">Steak</h1>
             <p className="text-xs text-sidebar-foreground">Waiter Dashboard</p>
           </div>
         </div>
