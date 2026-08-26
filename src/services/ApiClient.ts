@@ -159,6 +159,12 @@ class APICLIENT<TRequest, TResponse> {
     const res = await axiosInstance.get("/auth/orders/summary");
     return res.data;
   };
+
+    updateOrderItems = (orderId: number, items: { productId: string; quantity: number }[]) => {
+    return axiosInstance
+      .put<TResponse>(`${this.endpoint}/${orderId}/items`, items)
+      .then((res) => res.data);
+  };
   checkout = async (
     request: CheckoutRequestDto
   ): Promise<CheckoutResponseDto> => {
@@ -186,6 +192,12 @@ addCategory = (request: TRequest) => {
         transformRequest: [(data) => data], // 👈 prevents Axios from encoding
       }
     )
+    .then((res) => res.data);
+};
+
+deleteOrderItem = (orderId: number, productId: string) => {
+  return axiosInstance
+    .delete(`${this.endpoint}/${orderId}/items/${productId}`)
     .then((res) => res.data);
 };
 
