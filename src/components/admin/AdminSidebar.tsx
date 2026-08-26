@@ -21,11 +21,12 @@ import {
   CreditCard,
   Package,
   Tags,
+  Receipt,
 } from "lucide-react";
 
 const adminLinks = [
   { title: "Dashboard", url: "/adminHome", icon: LayoutDashboard },
-  { title: "Reports", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Manage Receipts", url: "/admin/managereceipt", icon: Receipt },
   { title: "Inventory", url: "/admin/inventory", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },

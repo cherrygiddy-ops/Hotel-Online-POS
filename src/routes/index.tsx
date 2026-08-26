@@ -15,6 +15,7 @@ import WaiterDashboard from "@/components/Waiter/WaiterDashboard";
 import CategoriesCrud from "@/components/admin/CategoriesCrud";
 import WaiterReceiptsManager from "@/components/Waiter/WaiterReceiptsManager";
 import DebtorsManager from "@/components/admin/DebtorsManager";
+import AdminReceiptsManager from "@/components/admin/AdminReceiptsManager";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
       { path: "admin/inventory", element: <AdminProductsPage /> },
       { path: "admin/categories", element: <CategoriesCrud /> },
       { path: "admin/debtors", element: <DebtorsManager /> },
+      { path: "admin/managereceipt", element: <AdminReceiptsManager /> },
     ],
   },
   {

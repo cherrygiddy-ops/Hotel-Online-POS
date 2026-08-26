@@ -7,7 +7,7 @@ import useOrdersForCustomer from "@/hooks/useOrdersForCustomer";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-export default function WaiterReceiptsManager() {
+export default function AdminReceiptsManager() {
   const [search, setSearch] = useState("");
 
   const {
@@ -471,7 +471,7 @@ export default function WaiterReceiptsManager() {
                                     ).toFixed(2)}
                                   </span>
 
-                                  {/* <Button
+                                  <Button
                                     size="sm"
                                     variant="destructive"
                                     onClick={() =>
@@ -489,7 +489,7 @@ export default function WaiterReceiptsManager() {
                                     }
                                   >
                                     Delete
-                                  </Button> */}
+                                  </Button>
                                 </li>
                               )
                             )}
@@ -591,7 +591,7 @@ export default function WaiterReceiptsManager() {
                             REPRINT
                             ================================== */}
 
-                        <Button
+                        {/* <Button
                           className="w-full"
                           onClick={() =>
                             handleReprintReceipt(
@@ -600,7 +600,7 @@ export default function WaiterReceiptsManager() {
                           }
                         >
                           🖨️ Reprint Receipt
-                        </Button>
+                        </Button> */}
 
                         {/* CLOSE */}
 
