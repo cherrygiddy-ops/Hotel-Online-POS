@@ -280,7 +280,7 @@ export default function AdminReceiptsManager() {
   return (
     <div className="p-4">
       <h2 className="font-bold text-lg mb-4">
-        Waiter Receipts Manager
+        Admin Receipts Manager
       </h2>
 
       {/* SEARCH */}
