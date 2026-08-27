@@ -106,7 +106,6 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
               <div style="font-weight:bold;">Customer Copy</div>
               <div>Steak House Hotel</div>
               <div>Receipt No: ${receipt.orderId}</div>
-              <div>Till Number:5631334 </div>
               <div>Date: ${new Date(receipt.orderDate).toLocaleString()}</div>
             </div>
             <div class="line"></div>
@@ -122,21 +121,21 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
     printDocument.close();
 
     // Print after short delay
-    setTimeout(async () => {
-        const printWindow = iframe.contentWindow;
-        printWindow?.focus();
-        printWindow?.print();
+    setTimeout(() => {
+      const printWindow = iframe.contentWindow;
+      printWindow?.focus();
+      printWindow?.print();
 
-        // Close modal and clear cart
-        setShowReceipt(false);
+      // ✅ Close modal after printing
+      setShowReceipt(false);
 
-        printWindow?.close();
-        setTimeout(() => iframe.remove(), 500);
-      }, 500);
-    } catch (error) {
-      console.error("Printing error:", error);
-      alert("Printing failed. Please check printer connection.");
-    }
+      printWindow?.close();
+      setTimeout(() => iframe.remove(), 500);
+    }, 500);
+  } catch (error) {
+    console.error("Reprint error:", error);
+    alert("Reprinting failed. Please check printer connection.");
+  }
 };
 
 
