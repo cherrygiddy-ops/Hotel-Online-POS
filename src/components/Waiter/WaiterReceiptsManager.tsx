@@ -41,237 +41,98 @@ export default function WaiterReceiptsManager() {
   // REPRINT RECEIPT
   // ============================================
 
-  const handleReprintReceipt = (receipt: OrdersResponseDto) => {
-    const printWindow = window.open("", "_blank");
+const handleReprintReceipt = (receipt: OrdersResponseDto) => {
+  try {
+    // Build hidden iframe
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
 
-    if (!printWindow) {
-      alert("Unable to open print window. Please allow popups.");
-      return;
-    }
+    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!printDocument) throw new Error("Unable to create print document.");
 
-    // Calculate total from items
-    const calculatedTotal = receipt.orderItems.reduce(
-      (sum, item) => {
-        const price = Number(item.product.price) || 0;
-        const quantity = Number(item.quantity) || 0;
+    // Calculate totals
+    const calculatedTotal = receipt.orderItems.reduce((sum, item) => {
+      const price = Number(item.product.price) || 0;
+      const quantity = Number(item.quantity) || 0;
+      return sum + price * quantity;
+    }, 0);
 
-        return sum + price * quantity;
-      },
-      0
-    );
+    const receiptTotal = Number(receipt.totalPrice) || calculatedTotal;
 
-    const receiptTotal =
-      Number(receipt.totalPrice) || calculatedTotal;
-
-    // ==========================================
-    // RECEIPT ITEMS
-    // ==========================================
-
+    // Build receipt items
     const receiptItems = receipt.orderItems
       .map((item) => {
         const unitPrice = Number(item.product.price) || 0;
         const quantity = Number(item.quantity) || 0;
         const itemTotal = unitPrice * quantity;
-
         return `
           <div class="item">
-            <span class="item-name">
-              ${item.product.name} x${quantity}
-            </span>
-
-            <span class="item-price">
-              KES ${itemTotal.toFixed(2)}
-            </span>
+            <span class="item-name">${item.product.name} x${quantity}</span>
+            <span class="item-price">KES ${itemTotal.toFixed(2)}</span>
           </div>
         `;
       })
       .join("");
 
-    // ==========================================
-    // PRINT DOCUMENT
-    // ==========================================
-
-    printWindow.document.write(`
+    // Write receipt HTML
+    printDocument.open();
+    printDocument.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8" />
-
-          <title>
-            Receipt ${receipt.orderId}
-          </title>
-
+          <title>Receipt ${receipt.orderId}</title>
           <style>
-            @page {
-              size: 58mm auto;
-              margin: 0;
-            }
-
-            * {
-              box-sizing: border-box;
-            }
-
-            html,
-            body {
-              margin: 0;
-              padding: 0;
-              width: 58mm;
-              background: white;
-            }
-
-            body {
-              font-family: monospace;
-              font-size: 11px;
-              line-height: 1.25;
-            }
-
-            .receipt {
-              width: 58mm;
-              padding: 3mm;
-            }
-
-            .header {
-              text-align: center;
-            }
-
-            .customer-copy {
-              font-size: 13px;
-              font-weight: bold;
-              margin-bottom: 3px;
-            }
-
-            .hotel-name {
-              font-size: 12px;
-              font-weight: bold;
-            }
-
-            .receipt-number {
-              margin-top: 3px;
-            }
-
-            .line {
-              border-top: 1px dashed #000;
-              margin: 7px 0;
-            }
-
-            .item {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              gap: 8px;
-              margin-bottom: 5px;
-            }
-
-            .item-name {
-              flex: 1;
-              text-align: left;
-              word-break: break-word;
-            }
-
-            .item-price {
-              white-space: nowrap;
-              text-align: right;
-            }
-
-            .total {
-              display: flex;
-              justify-content: space-between;
-              font-weight: bold;
-              font-size: 12px;
-            }
-
-            .footer {
-              text-align: center;
-              font-size: 10px;
-              margin-top: 8px;
-            }
-
-            .status {
-              text-align: center;
-              margin-top: 4px;
-              font-size: 10px;
-            }
+            @page { size: 58mm auto; margin: 0; }
+            body { font-family: monospace; font-size: 11px; line-height: 1.25; }
+            .receipt { width: 58mm; padding: 3mm; }
+            .line { border-top: 1px dashed black; margin: 6px 0; }
+            .item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .total { display: flex; justify-content: space-between; font-weight: bold; }
+            .thank-you { text-align: center; font-size: 10px; margin-top: 8px; }
           </style>
         </head>
-
         <body>
           <div class="receipt">
-
-            <!-- HEADER -->
-
-            <div class="header">
-              <div class="customer-copy">
-                Customer Copy
-              </div>
-
-              <div class="hotel-name">
-                Steak House Hotel
-              </div>
-
-              <div> Till No: 5631334 </div>
-
-              <div class="receipt-number">
-                Receipt No: ${receipt.orderId}
-              </div>
-
-              <div>
-                Date:
-                ${new Date(
-                  receipt.orderDate
-                ).toLocaleString()}
-              </div>
+            <div style="text-align:center;">
+              <div style="font-weight:bold;">Customer Copy</div>
+              <div>Steak House Hotel</div>
+              <div>Receipt No: ${receipt.orderId}</div>
+              <div>Till Number:5631334 </div>
+              <div>Date: ${new Date(receipt.orderDate).toLocaleString()}</div>
             </div>
-
-            <!-- SEPARATOR -->
-
             <div class="line"></div>
-
-            <!-- ITEMS -->
-
             ${receiptItems}
-
-            <!-- SEPARATOR -->
-
             <div class="line"></div>
-
-            <!-- TOTAL -->
-
-            <div class="total">
-              <span>TOTAL</span>
-
-              <span>
-                KES ${receiptTotal.toFixed(2)}
-              </span>
-            </div>
-
-            <!-- SEPARATOR -->
-
+            <div class="total"><span>TOTAL</span><span>KES ${receiptTotal.toFixed(2)}</span></div>
             <div class="line"></div>
-
-           
-
-            <!-- FOOTER -->
-
-            <div class="footer">
-              Thank you!
-              <br />
-              Welcome again 🌟
-            </div>
-
+            <div class="thank-you">Thank you!<br/>Welcome again 🌟</div>
           </div>
         </body>
       </html>
     `);
+    printDocument.close();
 
-    printWindow.document.open();
-
-    // Give browser time to render before printing
+    // Print after short delay
     setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.open();
-    }, 300);
-  };
+      const printWindow = iframe.contentWindow;
+      printWindow?.focus();
+      printWindow?.print();
+      printWindow?.close();
+      setTimeout(() => iframe.remove(), 500);
+    }, 500);
+  } catch (error) {
+    console.error("Reprint error:", error);
+    alert("Reprinting failed. Please check printer connection.");
+  }
+};
+
 
   // ============================================
   // UI
