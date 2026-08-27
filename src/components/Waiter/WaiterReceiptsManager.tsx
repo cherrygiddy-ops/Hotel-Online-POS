@@ -43,8 +43,11 @@ const [showReceipt, setShowReceipt] = useState(false);
   // REPRINT RECEIPT
   // ============================================
 
-const handleReprintReceipt = (receipt: OrdersResponseDto) => {
+const handleReprintReceipt = async (receipt: OrdersResponseDto) => {
   try {
+    // 🔹 Ask for waiter name
+    const waiterName = prompt("Enter waiter name for this receipt:") || "Unknown";
+
     // Build hidden iframe
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -105,7 +108,9 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
             <div style="text-align:center;">
               <div style="font-weight:bold;">Customer Copy</div>
               <div>Steak House Hotel</div>
+              <div>Till No: 5631334</div>
               <div>Receipt No: ${receipt.orderId}</div>
+              <div>Served By: ${waiterName}</div>
               <div>Date: ${new Date(receipt.orderDate).toLocaleString()}</div>
             </div>
             <div class="line"></div>
@@ -121,22 +126,22 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
     printDocument.close();
 
     // Print after short delay
- setTimeout(async () => {
-  const printWindow = iframe.contentWindow;
-  printWindow?.focus();
-  printWindow?.print();
+    setTimeout(async () => {
+      const printWindow = iframe.contentWindow;
+      printWindow?.focus();
+      printWindow?.print();
 
-  setShowReceipt(false); // close modal after reprint
+      setShowReceipt(false); // close modal after reprint
 
-  printWindow?.close();
-  setTimeout(() => iframe.remove(), 500);
-}, 500);
-
+      printWindow?.close();
+      setTimeout(() => iframe.remove(), 500);
+    }, 500);
   } catch (error) {
     console.error("Reprint error:", error);
     alert("Reprinting failed. Please check printer connection.");
   }
 };
+
 
 
   // ============================================
