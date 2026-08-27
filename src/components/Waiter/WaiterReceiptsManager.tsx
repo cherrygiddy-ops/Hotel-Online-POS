@@ -9,6 +9,8 @@ import { Input } from "../ui/input";
 
 export default function WaiterReceiptsManager() {
   const [search, setSearch] = useState("");
+// At the top of your component
+const [showReceipt, setShowReceipt] = useState(false);
 
   const {
     data: orders,
@@ -120,17 +122,21 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
     printDocument.close();
 
     // Print after short delay
-    setTimeout(() => {
-      const printWindow = iframe.contentWindow;
-      printWindow?.focus();
-      printWindow?.print();
-      printWindow?.close();
-      setTimeout(() => iframe.remove(), 500);
-    }, 500);
-  } catch (error) {
-    console.error("Reprint error:", error);
-    alert("Reprinting failed. Please check printer connection.");
-  }
+    setTimeout(async () => {
+        const printWindow = iframe.contentWindow;
+        printWindow?.focus();
+        printWindow?.print();
+
+        // Close modal and clear cart
+        setShowReceipt(false);
+
+        printWindow?.close();
+        setTimeout(() => iframe.remove(), 500);
+      }, 500);
+    } catch (error) {
+      console.error("Printing error:", error);
+      alert("Printing failed. Please check printer connection.");
+    }
 };
 
 
