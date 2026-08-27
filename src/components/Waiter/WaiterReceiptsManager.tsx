@@ -121,17 +121,17 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
     printDocument.close();
 
     // Print after short delay
-    setTimeout(() => {
-      const printWindow = iframe.contentWindow;
-      printWindow?.focus();
-      printWindow?.print();
+ setTimeout(async () => {
+  const printWindow = iframe.contentWindow;
+  printWindow?.focus();
+  printWindow?.print();
 
-      // ✅ Close modal after printing
-      setShowReceipt(true);
+  setShowReceipt(false); // close modal after reprint
 
-      printWindow?.close();
-      setTimeout(() => iframe.remove(), 500);
-    }, 500);
+  printWindow?.close();
+  setTimeout(() => iframe.remove(), 500);
+}, 500);
+
   } catch (error) {
     console.error("Reprint error:", error);
     alert("Reprinting failed. Please check printer connection.");
