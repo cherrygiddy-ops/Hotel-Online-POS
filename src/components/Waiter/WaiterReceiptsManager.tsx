@@ -127,7 +127,7 @@ const handleReprintReceipt = (receipt: OrdersResponseDto) => {
       printWindow?.print();
 
       // ✅ Close modal after printing
-      setShowReceipt(false);
+      setShowReceipt(true);
 
       printWindow?.close();
       setTimeout(() => iframe.remove(), 500);
