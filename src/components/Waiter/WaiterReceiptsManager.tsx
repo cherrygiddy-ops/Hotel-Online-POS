@@ -125,7 +125,7 @@ const handleReprintReceipt = async (receipt: OrdersResponseDto) => {
     `);
     printDocument.close();
 
-    // Print after short delay
+    // ✅ Use async timeout like in printReceipt
     setTimeout(async () => {
       const printWindow = iframe.contentWindow;
       printWindow?.focus();
