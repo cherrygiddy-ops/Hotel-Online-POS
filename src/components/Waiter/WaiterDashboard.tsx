@@ -196,12 +196,16 @@ export default function WaiterDashboard() {
       receiptLines.push("");
       receiptLines.push("");
 
-      const receipt = receiptLines.join("\n");
+    const receipt = receiptLines.join("\n");
 
-      console.log("Printing receipt:");
-      console.log(receipt);
+console.log("RECEIPT GENERATED:", receipt);
+console.log("RECEIPT LENGTH:", receipt.length);
+console.log("RECEIPT CART:", receiptCart);
 
-      const result = await Printer.printReceipt(receipt);
+console.log("Printing receipt:");
+console.log(receipt);
+
+const result = await Printer.printReceipt(receipt);
 
       console.log("Native printer result:", result);
 
