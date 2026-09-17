@@ -205,7 +205,7 @@ console.log("RECEIPT CART:", receiptCart);
 console.log("Printing receipt:");
 console.log(receipt);
 
-const result = await Printer.printReceipt(receipt);
+const result = await Printer.printReceipt({ receipt });
 
       console.log("Native printer result:", result);
 
