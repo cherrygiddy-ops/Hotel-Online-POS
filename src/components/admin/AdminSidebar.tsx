@@ -30,11 +30,10 @@ const adminLinks = [
   { title: "Inventory", url: "/admin/inventory", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: Tags },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
-  { title: "Debtors", url: "/admin/debtors", icon: ClipboardList }, 
+  { title: "Debtors", url: "/admin/debtors", icon: ClipboardList },
   { title: "Staff", url: "/admin/staff", icon: Users },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
-
 
 export function AdminSidebar() {
   const navigate = useNavigate();

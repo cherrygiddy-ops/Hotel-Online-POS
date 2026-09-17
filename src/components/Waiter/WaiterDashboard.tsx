@@ -37,7 +37,6 @@ export default function WaiterDashboard() {
   const [askWaiterName, setAskWaiterName] = useState(false);
   const { productsQuery } = useProducts();
   const { data: cart, isLoading } = useCart();
-  
 
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
@@ -86,142 +85,140 @@ export default function WaiterDashboard() {
 
   const handleCheckout = async () => {
     if (!cart?.id) return;
-     
+
     setAskWaiterName(true);
     // Save snapshot for preview
-   
   };
-const confirmWaiterName = () => {
-  if (!waiterName) {
-    alert("Please enter waiter name");
-    return;
-  }
-  // Save snapshot for preview
-  setReceiptCart({ ...cart });
-  // Ã¢Å“â€¦ donÃ¢â‚¬â„¢t mutate CheckoutResponseDto, just store waiterName separately
-  setAskWaiterName(false);
-  setShowReceipt(true);
-};
+  const confirmWaiterName = () => {
+    if (!waiterName) {
+      alert("Please enter waiter name");
+      return;
+    }
+
+    if (!cart?.items?.length) {
+      alert("Cart is empty");
+      return;
+    }
+
+    const snapshot = {
+      ...cart,
+      items: [...cart.items],
+    };
+
+    setReceiptCart(snapshot);
+    setAskWaiterName(false);
+    setShowReceipt(true);
+  };
 
   // --------------------------------------------------
   // PRINT RECEIPT
   // --------------------------------------------------
   const printReceipt = async () => {
-  try {
-    if (!receiptCart?.items?.length) {
-      alert("No items available to print");
-      return;
-    }
+    try {
+      if (!receiptCart?.items?.length) {
+        alert("No items available to print");
+        return;
+      }
 
-    const WIDTH = 32;
+      const WIDTH = 32;
 
-    const center = (text: string) => {
-      const clean = text.slice(0, WIDTH);
-      const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
-      return " ".repeat(left) + clean;
-    };
+      const center = (text: string) => {
+        const clean = text.slice(0, WIDTH);
+        const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
+        return " ".repeat(left) + clean;
+      };
 
-    const line = "-".repeat(WIDTH);
+      const line = "-".repeat(WIDTH);
 
-    const formatItem = (
-      name: string,
-      quantity: number,
-      total: number,
-    ) => {
-      const qty = String(quantity);
-      const amount = total.toFixed(2);
+      const formatItem = (name: string, quantity: number, total: number) => {
+        const qty = String(quantity);
+        const amount = total.toFixed(2);
 
-      // Leave room for quantity and amount
-      const maxNameLength = WIDTH - qty.length - amount.length - 2;
+        // Leave room for quantity and amount
+        const maxNameLength = WIDTH - qty.length - amount.length - 2;
 
-      const itemName =
-        name.length > maxNameLength
-          ? name.substring(0, maxNameLength)
-          : name;
+        const itemName =
+          name.length > maxNameLength ? name.substring(0, maxNameLength) : name;
 
-      return (
-        itemName.padEnd(maxNameLength, " ") +
-        " " +
-        qty.padStart(2, " ") +
-        " " +
-        amount.padStart(8, " ")
-      );
-    };
+        return (
+          itemName.padEnd(maxNameLength, " ") +
+          " " +
+          qty.padStart(2, " ") +
+          " " +
+          amount.padStart(8, " ")
+        );
+      };
 
-    const totalAmount = Number(receiptCart.totalPrice) || 0;
+      const totalAmount = Number(receiptCart.totalPrice) || 0;
 
-    const receiptLines: string[] = [];
+      const receiptLines: string[] = [];
 
-    receiptLines.push(center("STEAK HOUSE HOTEL"));
-    receiptLines.push(center("CUSTOMER RECEIPT"));
-    receiptLines.push(line);
+      receiptLines.push(center("STEAK HOUSE HOTEL"));
+      receiptLines.push(center("CUSTOMER RECEIPT"));
+      receiptLines.push(line);
 
-    if (receiptOrder?.orderId) {
-      receiptLines.push(`Receipt No: ${receiptOrder.orderId}`);
-    }
+      if (receiptOrder?.orderId) {
+        receiptLines.push(`Receipt No: ${receiptOrder.orderId}`);
+      }
 
-    receiptLines.push(`Served By: ${waiterName}`);
-    receiptLines.push(line);
-
-    receiptLines.push(
-      "ITEM".padEnd(22, " ") +
-      "QTY".padStart(3, " ") +
-      "TOTAL".padStart(7, " ")
-    );
-
-    receiptLines.push(line);
-
-    receiptCart.items.forEach((item) => {
-      const unitPrice = Number(item.product.price) || 0;
-      const itemTotal = unitPrice * item.quantity;
+      receiptLines.push(`Served By: ${waiterName}`);
+      receiptLines.push(line);
 
       receiptLines.push(
-        formatItem(
-          item.product.name,
-          item.quantity,
-          itemTotal,
-        )
+        "ITEM".padEnd(22, " ") +
+          "QTY".padStart(3, " ") +
+          "TOTAL".padStart(7, " "),
       );
-    });
 
-    receiptLines.push(line);
+      receiptLines.push(line);
 
-    receiptLines.push(
-      "TOTAL".padEnd(24, " ") +
-      `KES ${totalAmount.toFixed(2)}`.padStart(8, " ")
-    );
+      receiptCart.items.forEach((item) => {
+        const unitPrice = Number(item.product.price) || 0;
+        const itemTotal = unitPrice * item.quantity;
 
-    receiptLines.push(line);
-    receiptLines.push("");
-    receiptLines.push(center("Thank you!"));
-    receiptLines.push(center("Welcome again"));
-    receiptLines.push("");
-    receiptLines.push("");
-    receiptLines.push("");
+        receiptLines.push(
+          formatItem(item.product.name, item.quantity, itemTotal),
+        );
+      });
 
-    const receipt = receiptLines.join("\n");
+      receiptLines.push(line);
 
-    console.log("Printing receipt:");
-    console.log(receipt);
+      receiptLines.push(
+        "TOTAL".padEnd(24, " ") +
+          `KES ${totalAmount.toFixed(2)}`.padStart(8, " "),
+      );
 
-    const result = await Printer.printReceipt(receipt);
+      receiptLines.push(line);
+      receiptLines.push("");
+      receiptLines.push(center("Thank you!"));
+      receiptLines.push(center("Welcome again"));
+      receiptLines.push("");
+      receiptLines.push("");
+      receiptLines.push("");
 
-    console.log("Native printer result:", result);
+      const receipt = receiptLines.join("\n");
 
-    if (result.result === 0) {
-      alert("Receipt printed successfully");
-    } else {
-      alert("Printer returned error: " + result.result);
+      console.log("Printing receipt:");
+      console.log(receipt);
+
+      const result = await Printer.printReceipt(receipt);
+
+      console.log("Native printer result:", result);
+
+      if (result.result === 0) {
+        alert("Receipt printed successfully");
+      } else {
+        alert("Printer returned error: " + result.result);
+      }
+    } catch (error) {
+      console.error("Native printer error:", error);
+
+      alert(
+        "Receipt printing failed: " +
+          (error instanceof Error ? error.message : String(error)),
+      );
     }
-  } catch (error) {
-    console.error("Native printer error:", error);
-
-    alert(
-      "Receipt printing failed: " +
-        (error instanceof Error ? error.message : String(error)),
-    );
-  }
-};
+  };
   // --------------------------------------------------
   // ADD TO CART
   // --------------------------------------------------
@@ -430,33 +427,31 @@ const confirmWaiterName = () => {
         </div>
       </div>
 
-
       {askWaiterName && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-    <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
-      <h3 className="font-bold mb-3">Enter Waiter Name</h3>
-      <Input
-        placeholder="Waiter name"
-        value={waiterName}
-        onChange={(e) => setWaiterName(e.target.value)}
-      />
-      <div className="mt-4 flex justify-center gap-3">
-        <Button variant="outline" onClick={() => setAskWaiterName(false)}>
-          Cancel
-        </Button>
-        <Button onClick={confirmWaiterName}>Confirm</Button>
-      </div>
-    </div>
-  </div>
-)}
-
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
+            <h3 className="font-bold mb-3">Enter Waiter Name</h3>
+            <Input
+              placeholder="Waiter name"
+              value={waiterName}
+              onChange={(e) => setWaiterName(e.target.value)}
+            />
+            <div className="mt-4 flex justify-center gap-3">
+              <Button variant="outline" onClick={() => setAskWaiterName(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmWaiterName}>Confirm</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==================================================
           RECEIPT PREVIEW
           SCREEN ONLY
           ================================================== */}
 
-      {showReceipt && cart && (
+      {showReceipt && receiptCart && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
           <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
             {/* RECEIPT PREVIEW */}
@@ -474,7 +469,7 @@ const confirmWaiterName = () => {
 
               <hr className="my-2 border-dashed" />
 
-              {cart.items.map((item) => {
+              {receiptCart.items.map((item) => {
                 const unitPrice = Number(item.product.price) || 0;
 
                 const itemTotal = unitPrice * item.quantity;
@@ -498,7 +493,9 @@ const confirmWaiterName = () => {
               <div className="flex justify-between font-bold">
                 <span>TOTAL</span>
 
-                <span>KES {(Number(cart.totalPrice) || 0).toFixed(2)}</span>
+                <span>
+                  KES {(Number(receiptCart.totalPrice) || 0).toFixed(2)}
+                </span>
               </div>
 
               <hr className="my-2 border-dashed" />

@@ -15,32 +15,62 @@ public class PrinterPlugin extends Plugin {
     public void load() {
         super.load();
 
-        android.util.Log.d("PrinterPlugin", "load() called");
+        android.util.Log.d(
+                "PrinterPlugin",
+                "load() called"
+        );
 
         printerManager = new PrinterManager(getContext());
 
-        android.util.Log.d("PrinterPlugin", "Calling printerManager.connect()");
+        android.util.Log.d(
+                "PrinterPlugin",
+                "Calling printerManager.connect()"
+        );
 
         printerManager.connect();
     }
 
     @com.getcapacitor.PluginMethod
     public void printReceipt(PluginCall call) {
-        android.util.Log.d("PrinterPlugin", "printReceipt() called");
+
+        android.util.Log.d(
+                "PrinterPlugin",
+                "printReceipt() called"
+        );
 
         String receipt = call.getString("receipt");
 
+        // Diagnostic: verify that JavaScript actually sent receipt content
+        android.util.Log.d(
+                "PrinterPlugin",
+                "Receipt received: "
+                        + (receipt == null
+                        ? "NULL"
+                        : "length=" + receipt.length())
+        );
+
         if (receipt == null || receipt.trim().isEmpty()) {
+            android.util.Log.e(
+                    "PrinterPlugin",
+                    "Receipt content is empty"
+            );
+
             call.reject("Receipt content is empty");
             return;
         }
 
         if (printerManager == null) {
+            android.util.Log.e(
+                    "PrinterPlugin",
+                    "Printer manager is not initialized"
+            );
+
             call.reject("Printer manager is not initialized");
             return;
         }
 
         if (!printerManager.isConnected()) {
+
             android.util.Log.d(
                     "PrinterPlugin",
                     "Printer not connected yet. Waiting..."
@@ -48,62 +78,106 @@ public class PrinterPlugin extends Plugin {
 
             printerManager.connect();
 
-            new android.os.Handler(android.os.Looper.getMainLooper())
-                    .postDelayed(() -> {
-                        try {
-                            if (!printerManager.isConnected()) {
-                                call.reject("Printer service did not connect");
-                                return;
-                            }
+            new android.os.Handler(
+                    android.os.Looper.getMainLooper()
+            ).postDelayed(() -> {
 
-                            int result = printerManager.printReceipt(receipt);
+                try {
 
-                            com.getcapacitor.JSObject ret =
-                                    new com.getcapacitor.JSObject();
+                    if (!printerManager.isConnected()) {
 
-                            ret.put("result", result);
+                        android.util.Log.e(
+                                "PrinterPlugin",
+                                "Printer service did not connect"
+                        );
 
-                            if (result == 0) {
-                                call.resolve(ret);
-                            } else {
-                                call.reject(
-                                        "Printer returned error code: " + result
-                                );
-                            }
+                        call.reject(
+                                "Printer service did not connect"
+                        );
 
-                        } catch (Exception e) {
-                            android.util.Log.e(
-                                    "PrinterPlugin",
-                                    "Receipt printing failed",
-                                    e
-                            );
+                        return;
+                    }
 
-                            call.reject(
-                                    "Receipt printing failed: " + e.getMessage()
-                            );
-                        }
-                    }, 1000);
+                    android.util.Log.d(
+                            "PrinterPlugin",
+                            "Sending receipt to PrinterManager. Length="
+                                    + receipt.length()
+                    );
+
+                    int result =
+                            printerManager.printReceipt(receipt);
+
+                    android.util.Log.d(
+                            "PrinterPlugin",
+                            "PrinterManager returned result="
+                                    + result
+                    );
+
+                    JSObject ret = new JSObject();
+                    ret.put("result", result);
+
+                    if (result == 0) {
+                        call.resolve(ret);
+                    } else {
+                        call.reject(
+                                "Printer returned error code: "
+                                        + result
+                        );
+                    }
+
+                } catch (Exception e) {
+
+                    android.util.Log.e(
+                            "PrinterPlugin",
+                            "Receipt printing failed",
+                            e
+                    );
+
+                    call.reject(
+                            "Receipt printing failed: "
+                                    + e.getMessage()
+                    );
+                }
+
+            }, 1000);
 
             return;
         }
 
         try {
-            int result = printerManager.printReceipt(receipt);
 
-            com.getcapacitor.JSObject ret =
-                    new com.getcapacitor.JSObject();
+            android.util.Log.d(
+                    "PrinterPlugin",
+                    "Printer already connected. Sending receipt. Length="
+                            + receipt.length()
+            );
 
+            int result =
+                    printerManager.printReceipt(receipt);
+
+            android.util.Log.d(
+                    "PrinterPlugin",
+                    "PrinterManager returned result="
+                            + result
+            );
+
+            JSObject ret = new JSObject();
             ret.put("result", result);
 
             if (result == 0) {
+
                 call.resolve(ret);
+
             } else {
+
                 call.reject(
-                        "Printer returned error code: " + result
+                        "Printer returned error code: "
+                                + result
                 );
             }
 
         } catch (Exception e) {
+
             android.util.Log.e(
                     "PrinterPlugin",
                     "Receipt printing failed",
@@ -111,7 +185,8 @@ public class PrinterPlugin extends Plugin {
             );
 
             call.reject(
-                    "Receipt printing failed: " + e.getMessage()
+                    "Receipt printing failed: "
+                            + e.getMessage()
             );
         }
     }
