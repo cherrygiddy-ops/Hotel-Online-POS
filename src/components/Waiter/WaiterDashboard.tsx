@@ -107,20 +107,121 @@ const confirmWaiterName = () => {
   // PRINT RECEIPT
   // --------------------------------------------------
   const printReceipt = async () => {
-    try {
-      console.log("Calling native printer...");
-
-      const result = await Printer.testPrint();
-
-      console.log("Native printer result:", result);
-
-      alert("TEST PRINT sent successfully. Result: " + result.result);
-    } catch (error) {
-      console.error("Native printer error:", error);
-      alert("Native printer failed: " + (error instanceof Error ? error.message : String(error)));
+  try {
+    if (!receiptCart?.items?.length) {
+      alert("No items available to print");
+      return;
     }
-  };
 
+    const WIDTH = 32;
+
+    const center = (text: string) => {
+      const clean = text.slice(0, WIDTH);
+      const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
+      return " ".repeat(left) + clean;
+    };
+
+    const line = "-".repeat(WIDTH);
+
+    const formatItem = (
+      name: string,
+      quantity: number,
+      total: number,
+    ) => {
+      const qty = String(quantity);
+      const amount = total.toFixed(2);
+
+      // Leave room for quantity and amount
+      const maxNameLength = WIDTH - qty.length - amount.length - 2;
+
+      const itemName =
+        name.length > maxNameLength
+          ? name.substring(0, maxNameLength)
+          : name;
+
+      return (
+        itemName.padEnd(maxNameLength, " ") +
+        " " +
+        qty.padStart(2, " ") +
+        " " +
+        amount.padStart(8, " ")
+      );
+    };
+
+    const totalAmount = Number(receiptCart.totalPrice) || 0;
+
+    const receiptLines: string[] = [];
+
+    receiptLines.push(center("STEAK HOUSE HOTEL"));
+    receiptLines.push(center("CUSTOMER RECEIPT"));
+    receiptLines.push(line);
+
+    if (receiptOrder?.orderId) {
+      receiptLines.push(`Receipt No: ${receiptOrder.orderId}`);
+    }
+
+    receiptLines.push(`Served By: ${waiterName}`);
+    receiptLines.push(line);
+
+    receiptLines.push(
+      "ITEM".padEnd(22, " ") +
+      "QTY".padStart(3, " ") +
+      "TOTAL".padStart(7, " ")
+    );
+
+    receiptLines.push(line);
+
+    receiptCart.items.forEach((item) => {
+      const unitPrice = Number(item.product.price) || 0;
+      const itemTotal = unitPrice * item.quantity;
+
+      receiptLines.push(
+        formatItem(
+          item.product.name,
+          item.quantity,
+          itemTotal,
+        )
+      );
+    });
+
+    receiptLines.push(line);
+
+    receiptLines.push(
+      "TOTAL".padEnd(24, " ") +
+      `KES ${totalAmount.toFixed(2)}`.padStart(8, " ")
+    );
+
+    receiptLines.push(line);
+    receiptLines.push("");
+    receiptLines.push(center("Thank you!"));
+    receiptLines.push(center("Welcome again"));
+    receiptLines.push("");
+    receiptLines.push("");
+    receiptLines.push("");
+
+    const receipt = receiptLines.join("\n");
+
+    console.log("Printing receipt:");
+    console.log(receipt);
+
+    const result = await Printer.printReceipt(receipt);
+
+    console.log("Native printer result:", result);
+
+    if (result.result === 0) {
+      alert("Receipt printed successfully");
+    } else {
+      alert("Printer returned error: " + result.result);
+    }
+  } catch (error) {
+    console.error("Native printer error:", error);
+
+    alert(
+      "Receipt printing failed: " +
+        (error instanceof Error ? error.message : String(error)),
+    );
+  }
+};
   // --------------------------------------------------
   // ADD TO CART
   // --------------------------------------------------

@@ -1,11 +1,15 @@
-package com.onlinepos.printer;
+package com.onlinePos.printer;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
 public class PrinterManager {
+
+    private static final String TAG = "PrinterManager";
 
     private final Context context;
     private final PrinterServiceConnection connection;
@@ -19,38 +23,67 @@ public class PrinterManager {
     }
 
     public boolean connect() {
-        Intent intent = new Intent();
-        intent.setPackage("net.nyx.printerservice");
-        intent.setAction("net.nyx.printerservice.IPrinterService");
+        try {
+            Intent intent = new Intent("net.nyx.printerservice.IPrinterService");
+            intent.setPackage("net.nyx.printerservice");
 
-        return context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
+            boolean result = context.bindService(
+                    intent,
+                    connection,
+                    Context.BIND_AUTO_CREATE
+            );
+
+            Log.d(TAG, "bindService result = " + result);
+
+            return result;
+
+        } catch (Exception e) {
+            Log.e(TAG, "bindService failed", e);
+            return false;
+        }
     }
 
     void onServiceConnected(IBinder service) {
+        Log.d(TAG, "onServiceConnected called");
+
         printerService = new IPrinterServiceProxy(service);
         bound = true;
+
+        Log.d(TAG, "Printer service connected successfully");
     }
 
     void onServiceDisconnected() {
+        Log.d(TAG, "onServiceDisconnected called");
+
         printerService = null;
         bound = false;
     }
 
-    public int testPrint() throws RemoteException {
+    public int printReceipt(String receipt) throws RemoteException {
+        Log.d(TAG, "printReceipt called. bound=" + bound +
+                ", printerService=" + (printerService != null));
+
         if (printerService == null || !bound) {
-            throw new IllegalStateException("Printer service is not connected");
+            throw new IllegalStateException(
+                    "Printer service is not connected"
+            );
         }
 
         PrintTextFormat format = new PrintTextFormat();
-        format.textSize = 32;
-        format.align = 1;
-        format.style = 1;
-        format.font = 0;
 
-        int result = printerService.printText("TEST PRINT", format);
+        // Thermal printer receipt settings
+        format.textSize = 20;
+        format.align = 0;      // left
+        format.style = 0;      // normal
+        format.font = 3;       // monospace
+
+        int result = printerService.printText(receipt, format);
+
+        Log.d(TAG, "printReceipt result=" + result);
 
         if (result == 0) {
             result = printerService.commit();
+            Log.d(TAG, "commit result=" + result);
         }
 
         return result;
@@ -61,10 +94,17 @@ public class PrinterManager {
     }
 
     public void disconnect() {
-        if (bound) {
-            context.unbindService(connection);
-            bound = false;
-            printerService = null;
+        try {
+            if (bound) {
+                context.unbindService(connection);
+                Log.d(TAG, "Service unbound");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error unbinding service", e);
         }
+
+        bound = false;
+        printerService = null;
     }
 }
+

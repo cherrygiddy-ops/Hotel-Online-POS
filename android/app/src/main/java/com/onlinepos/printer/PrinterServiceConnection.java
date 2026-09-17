@@ -1,4 +1,4 @@
-package com.onlinepos.printer;
+package com.onlinePos.printer;
 
 import android.content.ComponentName;
 import android.content.ServiceConnection;
