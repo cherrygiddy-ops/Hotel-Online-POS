@@ -18,13 +18,7 @@ import Cart from "@/entities/Cart";
 import { CartItem } from "@/entities/CartItem";
 import { useCategories } from "@/hooks/useCategories";
 
-declare global {
-  interface Window {
-    AndroidPrinter?: {
-      printReceipt(text: string): void;
-    };
-  }
-}
+
 
 export default function WaiterDashboard() {
   const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>(
@@ -209,11 +203,48 @@ const result = await Printer.printReceipt({ receipt });
 
       console.log("Native printer result:", result);
 
-      if (result.result === 0) {
-        alert("Receipt printed successfully");
-      } else {
-        alert("Printer returned error: " + result.result);
-      }
+if (result.result === 0) {
+  // Printer succeeded — now finalize the checkout on the backend
+  if (!receiptCart?.id) {
+    alert("Receipt printed, but cart ID is missing");
+    return;
+  }
+
+  checkoutMutation.mutate(
+    {
+      cartId: receiptCart.id,
+    },
+    {
+      onSuccess: (data) => {
+        // Save the completed order response
+        setReceiptOrder(data);
+
+        // Close receipt preview
+        setShowReceipt(false);
+
+        // Clear local cart state
+        clearCart();
+
+        // Clear receipt snapshot
+        setReceiptCart(null);
+
+        // Reset waiter name
+        setWaiterName("");
+
+        alert("Receipt printed and order completed successfully");
+      },
+      onError: (error) => {
+        console.error("Checkout failed after printing:", error);
+
+        alert(
+          "Receipt printed, but checkout failed. Please contact the cashier.",
+        );
+      },
+    },
+  );
+} else {
+  alert("Printer returned error: " + result.result);
+}
     } catch (error) {
       console.error("Native printer error:", error);
 
