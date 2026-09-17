@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Printer from "../../plugins/printer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProducts } from "@/hooks/useProducts";
@@ -97,7 +98,7 @@ const confirmWaiterName = () => {
   }
   // Save snapshot for preview
   setReceiptCart({ ...cart });
-  // ✅ don’t mutate CheckoutResponseDto, just store waiterName separately
+  // Ã¢Å“â€¦ donÃ¢â‚¬â„¢t mutate CheckoutResponseDto, just store waiterName separately
   setAskWaiterName(false);
   setShowReceipt(true);
 };
@@ -106,108 +107,17 @@ const confirmWaiterName = () => {
   // PRINT RECEIPT
   // --------------------------------------------------
   const printReceipt = async () => {
-    if (!receiptCart) {
-      alert("Receipt not found.");
-      return;
-    }
-
     try {
-      // ✅ Call checkout API AFTER printing
-      const response: CheckoutResponseDto = await apiClient.checkout({
-        cartId: receiptCart.id,
-      });
-      setReceiptOrder(response);
-      console.log("Order placed:", response.orderId);
-      // Build hidden iframe
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.width = "1px";
-      iframe.style.height = "1px";
-      iframe.style.border = "0";
-      iframe.style.opacity = "0";
-      iframe.style.pointerEvents = "none";
-      document.body.appendChild(iframe);
+      console.log("Calling native printer...");
 
-      const printDocument =
-        iframe.contentDocument || iframe.contentWindow?.document;
-      if (!printDocument) throw new Error("Unable to create print document.");
+      const result = await Printer.testPrint();
 
-      // Build receipt items
-      const receiptItems = receiptCart.items
-        .map((item) => {
-          const unitPrice = Number(item.product.price) || 0;
-          const quantity = Number(item.quantity) || 0;
-          const itemTotal = unitPrice * quantity;
-          return `
-        <div class="item">
-          <span class="item-name">${item.product.name} x${quantity}</span>
-          <span class="item-price">KES ${itemTotal.toFixed(2)}</span>
-        </div>
-      `;
-        })
-        .join("");
+      console.log("Native printer result:", result);
 
-      const calculatedTotal = receiptCart.items.reduce((sum, item) => {
-        const price = Number(item.product.price) || 0;
-        const quantity = Number(item.quantity) || 0;
-        return sum + price * quantity;
-      }, 0);
-
-      const receiptTotal = Number(receiptCart.totalPrice) || calculatedTotal;
-
-      // Write receipt HTML
-      printDocument.open();
-      printDocument.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <title>Receipt</title>
-          <style>
-            @page { size: 58mm auto; margin: 0; }
-            body { font-family: monospace; font-size: 11px; line-height: 1.25; }
-            .receipt { width: 58mm; padding: 3mm; }
-            .line { border-top: 1px dashed black; margin: 6px 0; }
-            .item { display: flex; justify-content: space-between; margin-bottom: 4px; }
-            .total { display: flex; justify-content: space-between; font-weight: bold; }
-            .thank-you { text-align: center; font-size: 10px; margin-top: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div style="text-align:center;">
-              <div style="font-weight:bold;">Customer Copy</div>
-              <div>Steak House Hotel</div>
-              <div>Receipt No: ${response.orderId}</div>
-              <div>Served By: ${waiterName}</div>
-            </div>
-            <div class="line"></div>
-            ${receiptItems}
-            <div class="line"></div>
-            <div class="total"><span>TOTAL</span><span>KES ${receiptTotal.toFixed(2)}</span></div>
-            <div class="line"></div>
-            <div class="thank-you">Thank you!<br/>Welcome again 🌟</div>
-          </div>
-        </body>
-      </html>
-    `);
-      printDocument.close();
-
-      // ✅ Make the timeout callback async
-      setTimeout(async () => {
-        const printWindow = iframe.contentWindow;
-        printWindow?.focus();
-        printWindow?.print();
-
-        // Close modal and clear cart
-        setShowReceipt(true);
-
-        printWindow?.close();
-        setTimeout(() => iframe.remove(), 500);
-      }, 500);
+      alert("TEST PRINT sent successfully. Result: " + result.result);
     } catch (error) {
-      console.error("Printing error:", error);
-      alert("Printing failed. Please check printer connection.");
+      console.error("Native printer error:", error);
+      alert("Native printer failed: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -332,7 +242,7 @@ const confirmWaiterName = () => {
                       className="w-full h-12 text-sm font-medium"
                       onClick={() => handleAddToCart(item)}
                     >
-                      {item.name} – Kes {item.price}
+                      {item.name} Ã¢â‚¬â€œ Kes {item.price}
                     </Button>
                   ))}
                 </div>
@@ -345,7 +255,7 @@ const confirmWaiterName = () => {
 
       <div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
         <div className="bg-white border-t border-gray-300 p-6 h-64 shadow-lg flex flex-col w-full max-w-5xl">
-          <h2 className="text-base font-bold mb-3">🛒 Checkout List</h2>
+          <h2 className="text-base font-bold mb-3">Ã°Å¸â€ºâ€™ Checkout List</h2>
 
           <div className="flex-1 overflow-y-auto space-y-3">
             {cart?.items?.length === 0 ? (
@@ -366,7 +276,7 @@ const confirmWaiterName = () => {
                         handleDecrease(item.product.id, item.quantity)
                       }
                     >
-                      –
+                      Ã¢â‚¬â€œ
                     </Button>
 
                     <span className="font-bold">{item.quantity}</span>
@@ -495,7 +405,7 @@ const confirmWaiterName = () => {
               <div className="text-center text-xs mt-3">
                 Thank you!
                 <br />
-                Welcome again 🌟
+                Welcome again Ã°Å¸Å’Å¸
               </div>
             </div>
 
