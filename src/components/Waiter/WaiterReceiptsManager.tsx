@@ -96,9 +96,6 @@ const handleReprintReceipt = async (
     receiptLines.push("Till No: 5631334");
     receiptLines.push(`Receipt No: ${receipt.orderId}`);
     receiptLines.push(`Served By: ${waiterName}`);
-    receiptLines.push(
-      `Date: ${new Date(receipt.orderDate).toLocaleString()}`
-    );
 
     receiptLines.push(line);
 
