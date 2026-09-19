@@ -106,153 +106,137 @@ export default function WaiterDashboard() {
   // --------------------------------------------------
   // PRINT RECEIPT
   // --------------------------------------------------
-  const printReceipt = async () => {
-    try {
-      if (!receiptCart?.items?.length) {
-        alert("No items available to print");
-        return;
-      }
+const printReceipt = async () => {
+  try {
+    if (!receiptCart?.items?.length) {
+      alert("No items available to print");
+      return;
+    }
 
-      const WIDTH = 32;
+    if (!receiptCart?.id) {
+      alert("Cart ID is missing");
+      return;
+    }
 
-      const center = (text: string) => {
-        const clean = text.slice(0, WIDTH);
-        const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
-        return " ".repeat(left) + clean;
-      };
+    // STEP 1: Checkout first
+    const order = await checkoutMutation.mutateAsync({
+      cartId: receiptCart.id,
+    });
 
-      const line = "-".repeat(WIDTH);
+    const WIDTH = 32;
 
-      const formatItem = (name: string, quantity: number, total: number) => {
-        const qty = String(quantity);
-        const amount = total.toFixed(2);
+    const center = (text: string) => {
+      const clean = text.slice(0, WIDTH);
+      const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
+      return " ".repeat(left) + clean;
+    };
 
-        // Leave room for quantity and amount
-        const maxNameLength = WIDTH - qty.length - amount.length - 2;
+    const line = "-".repeat(WIDTH);
 
-        const itemName =
-          name.length > maxNameLength ? name.substring(0, maxNameLength) : name;
+    const formatItem = (
+      name: string,
+      quantity: number,
+      total: number,
+    ) => {
+      const qty = String(quantity);
+      const amount = total.toFixed(2);
 
-        return (
-          itemName.padEnd(maxNameLength, " ") +
-          " " +
-          qty.padStart(2, " ") +
-          " " +
-          amount.padStart(8, " ")
-        );
-      };
+      const maxNameLength =
+        WIDTH - qty.length - amount.length - 2;
 
-      const totalAmount = Number(receiptCart.totalPrice) || 0;
+      const itemName =
+        name.length > maxNameLength
+          ? name.substring(0, maxNameLength)
+          : name;
 
-      const receiptLines: string[] = [];
+      return (
+        itemName.padEnd(maxNameLength, " ") +
+        " " +
+        qty.padStart(2, " ") +
+        " " +
+        amount.padStart(8, " ")
+      );
+    };
 
-      receiptLines.push(center("STEAK HOUSE HOTEL"));
-      receiptLines.push(center("CUSTOMER RECEIPT"));
-      receiptLines.push(line);
+    const totalAmount = Number(receiptCart.totalPrice) || 0;
 
-      if (receiptOrder?.orderId) {
-        receiptLines.push(`Receipt No: ${receiptOrder.orderId}`);
-      }
+    const receiptLines: string[] = [];
 
-      receiptLines.push(`Served By: ${waiterName}`);
-      receiptLines.push(line);
+    receiptLines.push(center("STEAK HOUSE HOTEL"));
+    receiptLines.push(center("CUSTOMER RECEIPT"));
+    receiptLines.push(line);
+
+    // Receipt number will now appear on FIRST print
+    receiptLines.push(`Receipt No: ${order.orderId}`);
+
+    receiptLines.push(`Served By: ${waiterName}`);
+    receiptLines.push(line);
+
+    receiptLines.push(
+      "ITEM".padEnd(22, " ") +
+        "QTY".padStart(3, " ") +
+        "TOTAL".padStart(7, " "),
+    );
+
+    receiptLines.push(line);
+
+    receiptCart.items.forEach((item) => {
+      const unitPrice = Number(item.product.price) || 0;
+      const itemTotal = unitPrice * item.quantity;
 
       receiptLines.push(
-        "ITEM".padEnd(22, " ") +
-          "QTY".padStart(3, " ") +
-          "TOTAL".padStart(7, " "),
+        formatItem(
+          item.product.name,
+          item.quantity,
+          itemTotal,
+        ),
       );
+    });
 
-      receiptLines.push(line);
+    receiptLines.push(line);
 
-      receiptCart.items.forEach((item) => {
-        const unitPrice = Number(item.product.price) || 0;
-        const itemTotal = unitPrice * item.quantity;
+    receiptLines.push(
+      "TOTAL".padEnd(24, " ") +
+        `KES ${totalAmount.toFixed(2)}`.padStart(8, " "),
+    );
 
-        receiptLines.push(
-          formatItem(item.product.name, item.quantity, itemTotal),
-        );
-      });
-
-      receiptLines.push(line);
-
-      receiptLines.push(
-        "TOTAL".padEnd(24, " ") +
-          `KES ${totalAmount.toFixed(2)}`.padStart(8, " "),
-      );
-
-      receiptLines.push(line);
-      receiptLines.push("");
-      receiptLines.push(center("Thank you!"));
-      receiptLines.push(center("Welcome again"));
-      receiptLines.push("");
-      receiptLines.push("");
-      receiptLines.push("");
+    receiptLines.push(line);
+    receiptLines.push("");
+    receiptLines.push(center("Thank you!"));
+    receiptLines.push(center("Welcome again"));
+    receiptLines.push("");
+    receiptLines.push("");
+    receiptLines.push("");
 
     const receipt = receiptLines.join("\n");
 
-console.log("RECEIPT GENERATED:", receipt);
-console.log("RECEIPT LENGTH:", receipt.length);
-console.log("RECEIPT CART:", receiptCart);
+    const result = await Printer.printReceipt({ receipt });
 
-console.log("Printing receipt:");
-console.log(receipt);
+    console.log("Native printer result:", result);
 
-const result = await Printer.printReceipt({ receipt });
+    if (result.result === 0) {
+      clearItems();
 
-      console.log("Native printer result:", result);
+      setReceiptOrder(order);
+      setReceiptCart(null);
+      setShowReceipt(false);
+      setWaiterName("");
 
-if (result.result === 0) {
-  // Printer succeeded — now finalize the checkout on the backend
-  if (!receiptCart?.id) {
-    alert("Receipt printed, but cart ID is missing");
-    return;
-  }
-
-  checkoutMutation.mutate(
-    {
-      cartId: receiptCart.id,
-    },
-    {
-      onSuccess: (data) => {
-        // Save the completed order response
-        setReceiptOrder(data);
-
-        // Close receipt preview
-        setShowReceipt(false);
-
-        // Clear local cart state
-         clearItems();
-
-        // Clear receipt snapshot
-        setReceiptCart(null);
-
-        // Reset waiter name
-        setWaiterName("");
-
-        alert("Receipt printed and order completed successfully");
-      },
-      onError: (error) => {
-        console.error("Checkout failed after printing:", error);
-
-        alert(
-          "Receipt printed, but checkout failed. Please contact the cashier.",
-        );
-      },
-    },
-  );
-} else {
-  alert("Printer returned error: " + result.result);
-}
-    } catch (error) {
-      console.error("Native printer error:", error);
-
-      alert(
-        "Receipt printing failed: " +
-          (error instanceof Error ? error.message : String(error)),
-      );
+      alert("Receipt printed successfully");
+    } else {
+      alert("Printer returned error: " + result.result);
     }
-  };
+  } catch (error) {
+    console.error("Checkout/Print error:", error);
+
+    alert(
+      "Failed: " +
+        (error instanceof Error
+          ? error.message
+          : String(error)),
+    );
+  }
+};
   // --------------------------------------------------
   // ADD TO CART
   // --------------------------------------------------

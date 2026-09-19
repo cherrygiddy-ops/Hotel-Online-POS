@@ -28,7 +28,6 @@ const useCart = () => {
     queryKey: ["cartItems"],
     queryFn: () => CartServices.get(cartId),
     enabled: !!cartId,
-    staleTime: 2 * 60 * 1000,
     refetchOnMount: true,
   });
 };
