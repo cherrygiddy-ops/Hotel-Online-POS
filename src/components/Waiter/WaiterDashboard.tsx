@@ -15,7 +15,6 @@ import APICLIENT from "@/services/ApiClient";
 import { CheckoutRequestDto } from "@/entities/CheckoutRequestDto";
 import { CheckoutResponseDto } from "@/entities/CheckoutResponseDto";
 import Cart from "@/entities/Cart";
-import { CartItem } from "@/entities/CartItem";
 import { useCategories } from "@/hooks/useCategories";
 
 
@@ -35,7 +34,7 @@ export default function WaiterDashboard() {
   const updateItem = useUpdateCartItem();
   const deleteItem = useDeleteCartItem();
   const addItem = useAddToCart();
-  const { clearCart } = useCartStore();
+  const { clearItems } = useCartStore();
   const { data: categories } = useCategories();
 
   const {
@@ -223,7 +222,7 @@ if (result.result === 0) {
         setShowReceipt(false);
 
         // Clear local cart state
-        clearCart();
+         clearItems();
 
         // Clear receipt snapshot
         setReceiptCart(null);
