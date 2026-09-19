@@ -6,6 +6,7 @@ import { Product } from "@/entities/Product";
 import useOrdersForCustomer from "@/hooks/useOrdersForCustomer";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import Printer from "../../plugins/printer";
 
 export default function WaiterReceiptsManager() {
   const [search, setSearch] = useState("");
@@ -43,105 +44,116 @@ const [showReceipt, setShowReceipt] = useState(false);
   // REPRINT RECEIPT
   // ============================================
 
-const handleReprintReceipt = async (receipt: OrdersResponseDto) => {
+const handleReprintReceipt = async (
+  receipt: OrdersResponseDto
+) => {
   try {
-    // 🔹 Ask for waiter name
-    const waiterName = prompt("Enter waiter name for this receipt:") || "Unknown";
+    const waiterName =
+      prompt("Enter waiter name for this receipt:") || "Unknown";
 
-    // Build hidden iframe
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-    document.body.appendChild(iframe);
+    // Printer width for 58mm thermal printer
+    const WIDTH = 32;
+    const ITEM_WIDTH = 28;
+    const QTY_WIDTH = 4;
 
-    const printDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!printDocument) throw new Error("Unable to create print document.");
+    const center = (text: string) => {
+      const clean = text.slice(0, WIDTH);
+      const left = Math.max(
+        0,
+        Math.floor((WIDTH - clean.length) / 2)
+      );
 
-    // Calculate totals
-    const calculatedTotal = receipt.orderItems.reduce((sum, item) => {
-      const price = Number(item.product.price) || 0;
-      const quantity = Number(item.quantity) || 0;
-      return sum + price * quantity;
-    }, 0);
+      return " ".repeat(left) + clean;
+    };
 
-    const receiptTotal = Number(receipt.totalPrice) || calculatedTotal;
+    const line = "=".repeat(WIDTH);
+    const dashedLine = "-".repeat(WIDTH);
 
-    // Build receipt items
-    const receiptItems = receipt.orderItems
-      .map((item) => {
-        const unitPrice = Number(item.product.price) || 0;
-        const quantity = Number(item.quantity) || 0;
-        const itemTotal = unitPrice * quantity;
-        return `
-          <div class="item">
-            <span class="item-name">${item.product.name} x${quantity}</span>
-            <span class="item-price">KES ${itemTotal.toFixed(2)}</span>
-          </div>
-        `;
-      })
-      .join("");
+    // Calculate total items
+    const totalItems = receipt.orderItems.reduce(
+      (sum, item) => sum + Number(item.quantity || 0),
+      0
+    );
 
-    // Write receipt HTML
-    printDocument.open();
-    printDocument.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <title>Receipt ${receipt.orderId}</title>
-          <style>
-            @page { size: 58mm auto; margin: 0; }
-            body { font-family: monospace; font-size: 11px; line-height: 1.25; }
-            .receipt { width: 58mm; padding: 3mm; }
-            .line { border-top: 1px dashed black; margin: 6px 0; }
-            .item { display: flex; justify-content: space-between; margin-bottom: 4px; }
-            .total { display: flex; justify-content: space-between; font-weight: bold; }
-            .thank-you { text-align: center; font-size: 10px; margin-top: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div style="text-align:center;">
-              <div style="font-weight:bold;">Customer Copy</div>
-              <div>Steak House Hotel</div>
-              <div>Till No: 5631334</div>
-              <div>Receipt No: ${receipt.orderId}</div>
-              <div>Served By: ${waiterName}</div>
-              <div>Date: ${new Date(receipt.orderDate).toLocaleString()}</div>
-            </div>
-            <div class="line"></div>
-            ${receiptItems}
-            <div class="line"></div>
-            <div class="total"><span>TOTAL</span><span>KES ${receiptTotal.toFixed(2)}</span></div>
-            <div class="line"></div>
-            <div class="thank-you">Thank you!<br/>Welcome again 🌟</div>
-          </div>
-        </body>
-      </html>
-    `);
-    printDocument.close();
+    const receiptLines: string[] = [];
 
-    // ✅ Use async timeout like in printReceipt
-    setTimeout(async () => {
-      const printWindow = iframe.contentWindow;
-      printWindow?.focus();
-      printWindow?.print();
+    // HEADER
+    receiptLines.push(center("STEAK HOUSE HOTEL"));
+    receiptLines.push(center("KITCHEN COPY"));
+    receiptLines.push(line);
 
-      setShowReceipt(false); // close modal after reprint
+    // RECEIPT DETAILS
+    receiptLines.push(`Receipt No: ${receipt.orderId}`);
+    receiptLines.push(`Requested By: ${waiterName}`);
 
-      printWindow?.close();
-      setTimeout(() => iframe.remove(), 500);
-    }, 500);
+    receiptLines.push(line);
+
+    // TABLE HEADER
+    receiptLines.push(
+      "ITEM".padEnd(ITEM_WIDTH, " ") +
+        "QTY".padStart(QTY_WIDTH, " ")
+    );
+
+    receiptLines.push(dashedLine);
+
+    // TABLE ITEMS
+    receipt.orderItems.forEach((item) => {
+      const qty = String(item.quantity || 0);
+      let itemName = item.product.name || "";
+
+      // Keep item name inside ITEM column
+      if (itemName.length > ITEM_WIDTH) {
+        itemName = itemName.substring(0, ITEM_WIDTH);
+      }
+
+      receiptLines.push(
+        itemName.padEnd(ITEM_WIDTH, " ") +
+          qty.padStart(QTY_WIDTH, " ")
+      );
+    });
+
+    receiptLines.push(line);
+
+    // TOTAL ITEMS
+    receiptLines.push(
+      "TOTAL ITEMS TO BE SERVED".padEnd(ITEM_WIDTH, " ") +
+        String(totalItems).padStart(QTY_WIDTH, " ")
+    );
+
+    receiptLines.push(line);
+
+    const receiptText = receiptLines.join("\n");
+
+    console.log(
+      "Sending reprint directly to Android printer:",
+      receiptText
+    );
+
+    // ANDROID BRIDGE
+    const result = await Printer.printReceipt({
+      receipt: receiptText,
+    });
+
+    console.log("Native printer result:", result);
+
+    if (result.result === 0) {
+      alert("Receipt reprinted successfully");
+    } else {
+      alert(
+        "Printer returned error: " + result.result
+      );
+    }
   } catch (error) {
     console.error("Reprint error:", error);
-    alert("Reprinting failed. Please check printer connection.");
+
+    alert(
+      "Reprinting failed: " +
+        (error instanceof Error
+          ? error.message
+          : String(error))
+    );
   }
 };
-
 
 
   // ============================================
