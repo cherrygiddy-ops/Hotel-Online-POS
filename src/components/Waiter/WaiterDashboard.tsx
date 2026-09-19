@@ -283,8 +283,14 @@ const receipt = receiptLines.join("\n");
 
   return (
     <main className="w-full max-w-5xl mx-auto px-3 sm:px-4 pb-72 overflow-x-hidden">
-      <h1 className="text-2xl font-bold mb-4">Hotel POS Menu</h1>
-
+      <div className="mb-6 w-full bg-yellow-400 px-4 py-5 text-center shadow-md">
+  <h1 className="text-xl sm:text-2xl font-extrabold text-black">
+    Welcome to Steak House Hotel
+  </h1>
+  <p className="mt-1 text-sm font-semibold text-black">
+    Hotel POS Menu
+  </p>
+</div>
       {/* SEARCH */}
 
      <Input
