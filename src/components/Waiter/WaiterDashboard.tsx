@@ -367,22 +367,22 @@ const receipt = receiptLines.join("\n");
       </h2>
     </div>
 
-    {/* ITEMS */}
+    {/* SCROLLABLE ITEMS */}
     <div
       className="
         flex-1
         min-h-0
-        overflow-hidden
+        overflow-y-auto
+        overflow-x-hidden
         px-3
         sm:px-6
-        flex
-        flex-col
-        justify-end
-        gap-2
+        space-y-2
+        overscroll-contain
+        scrollbar-thin
       "
     >
       {cart?.items?.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 py-2">
           No items yet
         </p>
       ) : (
@@ -392,7 +392,6 @@ const receipt = receiptLines.join("\n");
             className="
               w-full
               min-w-0
-              shrink-0
               flex
               items-center
               gap-2
@@ -469,7 +468,7 @@ const receipt = receiptLines.join("\n");
       )}
     </div>
 
-    {/* TOTAL */}
+    {/* TOTAL / CHECKOUT */}
     <div
       className="
         shrink-0
@@ -521,7 +520,19 @@ const receipt = receiptLines.join("\n");
 
       {askWaiterName && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
+         <div
+  className="
+    bg-white
+    rounded-lg
+    p-4
+    sm:p-6
+    w-[calc(100%-24px)]
+    max-w-[360px]
+    max-h-[90vh]
+    overflow-y-auto
+    shadow-xl
+  "
+>
             <h3 className="font-bold mb-3">Enter Waiter Name</h3>
             <Input
               placeholder="Waiter name"
@@ -574,39 +585,54 @@ const receipt = receiptLines.join("\n");
 
         <hr className="my-2 border-black border-dashed" />
 
-        {/* ITEMS */}
+   
 
-        {receiptCart.items.map((item) => (
-          <div
-            key={item.product.id}
-            className="flex justify-between text-sm mb-2 font-bold"
-          >
-            <span className="break-words">
-              {item.product.name}
-            </span>
+       {/* ITEMS */}
+<div className="w-full text-sm font-bold">
+  {/* HEADER */}
+  <div className="flex w-full border-b border-dashed border-black pb-1 mb-2">
+    <span className="flex-1 min-w-0">
+      ITEM
+    </span>
 
-            <span className="ml-3 whitespace-nowrap">
-              x{item.quantity}
-            </span>
-          </div>
-        ))}
+    <span className="w-10 text-right shrink-0">
+      QTY
+    </span>
+  </div>
+
+  {/* ROWS */}
+  {receiptCart.items.map((item) => (
+    <div
+      key={item.product.id}
+      className="flex w-full mb-2"
+    >
+      <span className="flex-1 min-w-0 break-words pr-2">
+        {item.product.name}
+      </span>
+
+      <span className="w-10 text-right shrink-0">
+        {item.quantity}
+      </span>
+    </div>
+  ))}
+</div>
 
         <hr className="my-2 border-black border-dashed" />
 
         {/* TOTAL ITEMS */}
 
-        <div className="flex justify-between font-extrabold text-sm">
-          <span>
-            TOTAL ITEMS TO BE SERVED
-          </span>
+        <div className="flex w-full items-start font-extrabold text-sm">
+  <span className="flex-1 min-w-0 pr-2">
+    TOTAL ITEMS TO BE SERVED
+  </span>
 
-          <span>
-            {receiptCart.items.reduce(
-              (sum, item) => sum + item.quantity,
-              0,
-            )}
-          </span>
-        </div>
+  <span className="w-10 text-right shrink-0">
+    {receiptCart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    )}
+  </span>
+</div>
 
         <hr className="my-2 border-black border-dashed" />
 
