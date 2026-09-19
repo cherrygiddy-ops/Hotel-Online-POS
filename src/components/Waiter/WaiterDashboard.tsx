@@ -148,9 +148,12 @@ receiptLines.push(`Requested By: ${waiterName}`);
 receiptLines.push(line);
 
 // TABLE HEADER
+const ITEM_WIDTH = 28;
+const QTY_WIDTH = 4;
+
 receiptLines.push(
-  "ITEM".padEnd(28, " ") +
-  "QTY".padStart(4, " ")
+  "ITEM".padEnd(ITEM_WIDTH, " ") +
+  "QTY".padStart(QTY_WIDTH, " ")
 );
 
 receiptLines.push(dashedLine);
@@ -158,20 +161,26 @@ receiptLines.push(dashedLine);
 // TABLE ROWS
 receiptCart.items.forEach((item) => {
   const qty = String(item.quantity);
-
-  const maxItemLength = WIDTH - 4;
-
   let itemName = item.product.name;
 
-  if (itemName.length > maxItemLength) {
-    itemName = itemName.substring(0, maxItemLength);
+  // Keep item name within the 28-character column
+  if (itemName.length > ITEM_WIDTH) {
+    itemName = itemName.substring(0, ITEM_WIDTH);
   }
 
   receiptLines.push(
-    itemName.padEnd(maxItemLength, " ") +
-    qty.padStart(4, " ")
+    itemName.padEnd(ITEM_WIDTH, " ") +
+    qty.padStart(QTY_WIDTH, " ")
   );
 });
+
+receiptLines.push(line);
+
+// TOTAL
+receiptLines.push(
+  "TOTAL ITEMS TO BE SERVED".padEnd(ITEM_WIDTH, " ") +
+  String(totalItems).padStart(QTY_WIDTH, " ")
+);
 
 receiptLines.push(line);
 
