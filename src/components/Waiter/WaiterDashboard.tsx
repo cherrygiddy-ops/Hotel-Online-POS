@@ -281,18 +281,18 @@ const receipt = receiptLines.join("\n");
   // --------------------------------------------------
 
   return (
-    <main className="max-w-5xl mx-auto p-4">
+    <main className="w-full max-w-5xl mx-auto px-3 sm:px-4 pb-72 overflow-x-hidden">
       <h1 className="text-2xl font-bold mb-4">Hotel POS Menu</h1>
 
       {/* SEARCH */}
 
-      <Input
-        type="text"
-        placeholder="Search items..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 h-11"
-      />
+     <Input
+  type="text"
+  placeholder="Search items..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="mb-6 h-11 w-full min-w-0"
+/>
 
       {/* PRODUCTS */}
 
@@ -321,104 +321,203 @@ const receipt = receiptLines.join("\n");
                 transition={{
                   duration: 0.3,
                 }}
-                className="rounded-lg border border-gray-200 p-4 bg-white shadow"
+                className="w-full min-w-0 rounded-lg border border-gray-200 p-3 sm:p-4 bg-white shadow"
               >
                 <h2 className="text-lg font-semibold mb-3">{category}</h2>
 
                 <div className="flex flex-col gap-3">
                   {filtered.map((item) => (
                     <Button
-                      key={item.id}
-                      variant="outline"
-                      className="w-full h-12 text-sm font-medium"
-                      onClick={() => handleAddToCart(item)}
-                    >
-                      {item.name} Ã¢â‚¬â€œ Kes {item.price}
-                    </Button>
+  key={item.id}
+  variant="outline"
+  className="w-full min-w-0 h-auto min-h-12 px-3 py-3 text-sm font-medium whitespace-normal break-words text-left"
+  onClick={() => handleAddToCart(item)}
+>
+  <span className="w-full break-words">
+    {item.name} - Kes {item.price}
+  </span>
+</Button>
                   ))}
                 </div>
               </motion.div>
             );
           })}
       </div>
+{/* CART / CHECKOUT */}
+<div className="fixed bottom-0 left-0 right-0 z-50 w-full">
+  <div
+    className="
+      mx-auto
+      w-full
+      max-w-5xl
+      bg-white
+      border-t
+      border-gray-300
+      shadow-2xl
+      flex
+      flex-col
+      h-[280px]
+      sm:h-64
+    "
+  >
+    {/* HEADER */}
+    <div className="shrink-0 px-3 sm:px-6 pt-3 pb-2">
+      <h2 className="text-sm sm:text-base font-bold">
+        🛒 Checkout List
+      </h2>
+    </div>
 
-      {/* CART */}
-
-      <div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
-        <div className="bg-white border-t border-gray-300 p-6 h-64 shadow-lg flex flex-col w-full max-w-5xl">
-          <h2 className="text-base font-bold mb-3">Ã°Å¸â€ºâ€™ Checkout List</h2>
-
-          <div className="flex-1 overflow-y-auto space-y-3">
-            {cart?.items?.length === 0 ? (
-              <p className="text-sm text-gray-500">No items yet</p>
-            ) : (
-              cart?.items?.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="flex justify-between items-center text-sm bg-gray-100 rounded px-3 py-2"
-                >
-                  <span className="font-medium">{item.product.name}</span>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleDecrease(item.product.id, item.quantity)
-                      }
-                    >
-                      Ã¢â‚¬â€œ
-                    </Button>
-
-                    <span className="font-bold">{item.quantity}</span>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleIncrease(item.product.id, item.quantity)
-                      }
-                    >
-                      +
-                    </Button>
-
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        handleRemove(item.product.id, item.quantity)
-                      }
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* TOTAL */}
-
-          <div className="mt-3 flex justify-between items-center border-t border-gray-200 pt-3">
-            <span className="text-sm font-semibold">
-              Total Items:{" "}
-              {cart?.items?.reduce((sum, i) => sum + i.quantity, 0)}
-            </span>
-
-            <span className="text-sm font-semibold">
-              Total Amount: Kes {cart?.totalPrice ?? 0}
-            </span>
-
-            <Button
-              className="h-10 px-6 bg-green-600 text-white hover:bg-green-700"
-              onClick={handleCheckout}
-              disabled={checkoutMutation.isPending}
+    {/* ITEMS */}
+    <div
+      className="
+        flex-1
+        min-h-0
+        overflow-hidden
+        px-3
+        sm:px-6
+        flex
+        flex-col
+        justify-end
+        gap-2
+      "
+    >
+      {cart?.items?.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          No items yet
+        </p>
+      ) : (
+        cart.items.map((item) => (
+          <div
+            key={item.product.id}
+            className="
+              w-full
+              min-w-0
+              shrink-0
+              flex
+              items-center
+              gap-2
+              bg-gray-100
+              rounded
+              px-2
+              py-2
+            "
+          >
+            {/* ITEM NAME */}
+            <span
+              className="
+                flex-1
+                min-w-0
+                text-xs
+                sm:text-sm
+                font-medium
+                break-words
+              "
             >
-              {checkoutMutation.isPending ? "Processing..." : "Checkout"}
-            </Button>
+              {item.product.name}
+            </span>
+
+            {/* CONTROLS */}
+            <div className="shrink-0 flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() =>
+                  handleDecrease(
+                    item.product.id,
+                    item.quantity
+                  )
+                }
+              >
+                -
+              </Button>
+
+              <span className="w-6 text-center text-sm font-bold">
+                {item.quantity}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() =>
+                  handleIncrease(
+                    item.product.id,
+                    item.quantity
+                  )
+                }
+              >
+                +
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-8 px-2 text-xs sm:px-3 sm:text-sm"
+                onClick={() =>
+                  handleRemove(
+                    item.product.id,
+                    item.quantity
+                  )
+                }
+              >
+                Remove
+              </Button>
+            </div>
           </div>
+        ))
+      )}
+    </div>
+
+    {/* TOTAL */}
+    <div
+      className="
+        shrink-0
+        border-t
+        border-gray-200
+        px-3
+        sm:px-6
+        py-2
+        bg-white
+      "
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-semibold">
+            Total Items:{" "}
+            {cart?.items?.reduce(
+              (sum, i) => sum + i.quantity,
+              0
+            ) || 0}
+          </p>
+
+          <p className="text-xs sm:text-sm font-semibold truncate">
+            Total: Kes {cart?.totalPrice ?? 0}
+          </p>
         </div>
+
+        <Button
+          className="
+            shrink-0
+            h-9
+            px-4
+            sm:h-10
+            sm:px-6
+            bg-green-600
+            text-white
+            hover:bg-green-700
+          "
+          onClick={handleCheckout}
+          disabled={checkoutMutation.isPending}
+        >
+          {checkoutMutation.isPending
+            ? "Processing..."
+            : "Checkout"}
+        </Button>
       </div>
+    </div>
+  </div>
+</div>
 
       {askWaiterName && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
