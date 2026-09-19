@@ -20,9 +20,6 @@ import { useCategories } from "@/hooks/useCategories";
 
 
 export default function WaiterDashboard() {
-  const apiClient = new APICLIENT<CheckoutRequestDto, CheckoutResponseDto>(
-    "/auth/checkout",
-  );
   const [receiptOrder, setReceiptOrder] = useState<CheckoutResponseDto | null>(
     null,
   );
@@ -131,82 +128,66 @@ const printReceipt = async () => {
       return " ".repeat(left) + clean;
     };
 
-    const line = "-".repeat(WIDTH);
+    const line = "=".repeat(WIDTH);
+    const dashedLine = "-".repeat(WIDTH);
 
-    const formatItem = (
-      name: string,
-      quantity: number,
-      total: number,
-    ) => {
-      const qty = String(quantity);
-      const amount = total.toFixed(2);
-
-      const maxNameLength =
-        WIDTH - qty.length - amount.length - 2;
-
-      const itemName =
-        name.length > maxNameLength
-          ? name.substring(0, maxNameLength)
-          : name;
-
-      return (
-        itemName.padEnd(maxNameLength, " ") +
-        " " +
-        qty.padStart(2, " ") +
-        " " +
-        amount.padStart(8, " ")
-      );
-    };
-
-    const totalAmount = Number(receiptCart.totalPrice) || 0;
+    const totalItems = receiptCart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
 
     const receiptLines: string[] = [];
 
+    // HEADER
     receiptLines.push(center("STEAK HOUSE HOTEL"));
-    receiptLines.push(center("CUSTOMER RECEIPT"));
+    receiptLines.push(center("KITCHEN COPY"));
     receiptLines.push(line);
 
-    // Receipt number will now appear on FIRST print
+    // ORDER INFORMATION
     receiptLines.push(`Receipt No: ${order.orderId}`);
-
     receiptLines.push(`Served By: ${waiterName}`);
+
     receiptLines.push(line);
 
+    // ITEMS
     receiptLines.push(
-      "ITEM".padEnd(22, " ") +
-        "QTY".padStart(3, " ") +
-        "TOTAL".padStart(7, " "),
+      "ITEM".padEnd(25, " ") +
+        "QTY".padStart(7, " "),
     );
 
-    receiptLines.push(line);
+    receiptLines.push(dashedLine);
 
     receiptCart.items.forEach((item) => {
-      const unitPrice = Number(item.product.price) || 0;
-      const itemTotal = unitPrice * item.quantity;
+      const qty = String(item.quantity);
+
+      const maxNameLength = WIDTH - qty.length - 1;
+
+      const itemName =
+        item.product.name.length > maxNameLength
+          ? item.product.name.substring(0, maxNameLength)
+          : item.product.name;
 
       receiptLines.push(
-        formatItem(
-          item.product.name,
-          item.quantity,
-          itemTotal,
-        ),
+        itemName.padEnd(maxNameLength, " ") +
+          " " +
+          qty.padStart(2, " "),
       );
     });
 
     receiptLines.push(line);
 
+    // TOTAL ITEMS
     receiptLines.push(
-      "TOTAL".padEnd(24, " ") +
-        `KES ${totalAmount.toFixed(2)}`.padStart(8, " "),
+      "TOTAL ITEMS TO BE SERVED".padEnd(25, " ") +
+        String(totalItems).padStart(7, " "),
     );
 
     receiptLines.push(line);
-    receiptLines.push("");
-    receiptLines.push(center("Thank you!"));
-    receiptLines.push(center("Welcome again"));
-    receiptLines.push("");
-    receiptLines.push("");
-    receiptLines.push("");
+
+    // No prices
+    // No total amount
+    // No customer/kitchen copy
+    // No welcome message
 
     const receipt = receiptLines.join("\n");
 
@@ -469,74 +450,93 @@ const printReceipt = async () => {
           SCREEN ONLY
           ================================================== */}
 
-      {showReceipt && receiptCart && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
-            {/* RECEIPT PREVIEW */}
+   {showReceipt && receiptCart && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+    <div className="bg-white rounded-lg p-6 w-[320px] shadow-xl">
 
-            <div className="bg-white">
-              <div className="text-center">
-                <h2 className="font-bold text-lg">Customer Copy</h2>
+      {/* RECEIPT PREVIEW */}
 
-                <p>Steak House Hotel</p>
-                {receiptOrder && (
-                  <p className="text-xs">Receipt No: {receiptOrder.orderId}</p>
-                )}
-                <p className="text-xs">Served By: {waiterName}</p>
-              </div>
+      <div className="bg-white text-black font-bold">
+        <div className="text-center">
 
-              <hr className="my-2 border-dashed" />
+          <h2 className="font-extrabold text-lg">
+            STEAK HOUSE HOTEL
+          </h2>
 
-              {receiptCart.items.map((item) => {
-                const unitPrice = Number(item.product.price) || 0;
+          <p className="font-extrabold">
+            KITCHEN Copy
+          </p>
 
-                const itemTotal = unitPrice * item.quantity;
+          {receiptOrder && (
+            <p className="text-sm font-bold">
+              Receipt No: {receiptOrder.orderId}
+            </p>
+          )}
 
-                return (
-                  <div
-                    key={item.product.id}
-                    className="flex justify-between text-sm mb-1"
-                  >
-                    <span>
-                      {item.product.name} x{item.quantity}
-                    </span>
+          <p className="text-sm font-bold">
+            Requested By: {waiterName}
+          </p>
 
-                    <span>KES {itemTotal.toFixed(2)}</span>
-                  </div>
-                );
-              })}
-
-              <hr className="my-2 border-dashed" />
-
-              <div className="flex justify-between font-bold">
-                <span>TOTAL</span>
-
-                <span>
-                  KES {(Number(receiptCart.totalPrice) || 0).toFixed(2)}
-                </span>
-              </div>
-
-              <hr className="my-2 border-dashed" />
-
-              <div className="text-center text-xs mt-3">
-                Thank you!
-                <br />
-                Welcome again Ã°Å¸Å’Å¸
-              </div>
-            </div>
-
-            {/* SCREEN BUTTONS */}
-
-            <div className="mt-4 flex justify-center gap-3">
-              <Button variant="outline" onClick={() => setShowReceipt(false)}>
-                Cancel
-              </Button>
-
-              <Button onClick={printReceipt}>Print Receipt</Button>
-            </div>
-          </div>
         </div>
-      )}
+
+        <hr className="my-2 border-black border-dashed" />
+
+        {/* ITEMS */}
+
+        {receiptCart.items.map((item) => (
+          <div
+            key={item.product.id}
+            className="flex justify-between text-sm mb-2 font-bold"
+          >
+            <span className="break-words">
+              {item.product.name}
+            </span>
+
+            <span className="ml-3 whitespace-nowrap">
+              x{item.quantity}
+            </span>
+          </div>
+        ))}
+
+        <hr className="my-2 border-black border-dashed" />
+
+        {/* TOTAL ITEMS */}
+
+        <div className="flex justify-between font-extrabold text-sm">
+          <span>
+            TOTAL ITEMS TO BE SERVED
+          </span>
+
+          <span>
+            {receiptCart.items.reduce(
+              (sum, item) => sum + item.quantity,
+              0,
+            )}
+          </span>
+        </div>
+
+        <hr className="my-2 border-black border-dashed" />
+
+      </div>
+
+      {/* SCREEN BUTTONS */}
+
+      <div className="mt-4 flex justify-center gap-3">
+        <Button
+          variant="outline"
+          onClick={() => setShowReceipt(false)}
+        >
+          Cancel
+        </Button>
+
+        <Button onClick={printReceipt}>
+          Print Receipt
+        </Button>
+      </div>
+
+    </div>
+  </div>
+)}
     </main>
   );
 }
