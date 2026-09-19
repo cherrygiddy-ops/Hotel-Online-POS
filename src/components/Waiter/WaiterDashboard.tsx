@@ -184,14 +184,6 @@ receiptLines.push(
 
 receiptLines.push(line);
 
-// TOTAL
-receiptLines.push(
-  "TOTAL ITEMS TO BE SERVED".padEnd(28, " ") +
-  String(totalItems).padStart(4, " ")
-);
-
-receiptLines.push(line);
-
 const receipt = receiptLines.join("\n");
 
     const result = await Printer.printReceipt({ receipt });
