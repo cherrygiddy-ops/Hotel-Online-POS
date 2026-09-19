@@ -143,7 +143,6 @@ receiptLines.push(center("KITCHEN COPY"));
 receiptLines.push(line);
 
 receiptLines.push(`Receipt No: ${order.orderId}`);
-receiptLines.push(`Till No: 5631334`);
 receiptLines.push(`Requested By: ${waiterName}`);
 
 receiptLines.push(line);
