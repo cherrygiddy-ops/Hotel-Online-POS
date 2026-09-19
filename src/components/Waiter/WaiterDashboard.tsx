@@ -145,7 +145,7 @@ const printReceipt = async () => {
 
     // ORDER INFORMATION
     receiptLines.push(`Receipt No: ${order.orderId}`);
-    receiptLines.push(`Served By: ${waiterName}`);
+    receiptLines.push(`Requested By: ${waiterName}`);
 
     receiptLines.push(line);
 
