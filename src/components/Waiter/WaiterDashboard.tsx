@@ -120,76 +120,71 @@ const printReceipt = async () => {
       cartId: receiptCart.id,
     });
 
-    const WIDTH = 32;
+ const WIDTH = 32;
 
-    const center = (text: string) => {
-      const clean = text.slice(0, WIDTH);
-      const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
-      return " ".repeat(left) + clean;
-    };
+const center = (text: string) => {
+  const clean = text.slice(0, WIDTH);
+  const left = Math.max(0, Math.floor((WIDTH - clean.length) / 2));
+  return " ".repeat(left) + clean;
+};
 
-    const line = "=".repeat(WIDTH);
-    const dashedLine = "-".repeat(WIDTH);
+const line = "=".repeat(WIDTH);
+const dashedLine = "-".repeat(WIDTH);
 
-    const totalItems = receiptCart.items.reduce(
-      (sum, item) => sum + item.quantity,
-      0,
-    );
+const totalItems = receiptCart.items.reduce(
+  (sum, item) => sum + item.quantity,
+  0,
+);
 
-    const receiptLines: string[] = [];
+const receiptLines: string[] = [];
 
-    // HEADER
-    receiptLines.push(center("STEAK HOUSE HOTEL"));
-    receiptLines.push(center("KITCHEN COPY"));
-    receiptLines.push(line);
+receiptLines.push(center("STEAK HOUSE HOTEL"));
+receiptLines.push(center("KITCHEN COPY"));
+receiptLines.push(line);
 
-    // ORDER INFORMATION
-    receiptLines.push(`Receipt No: ${order.orderId}`);
-    receiptLines.push(`Requested By: ${waiterName}`);
+receiptLines.push(`Receipt No: ${order.orderId}`);
+receiptLines.push(`Till No: 5631334`);
+receiptLines.push(`Requested By: ${waiterName}`);
 
-    receiptLines.push(line);
+receiptLines.push(line);
 
-    // ITEMS
-    receiptLines.push(
-      "ITEM".padEnd(25, " ") +
-        "QTY".padStart(7, " "),
-    );
+// TABLE HEADER
+receiptLines.push(
+  "ITEM".padEnd(28, " ") +
+  "QTY".padStart(4, " ")
+);
 
-    receiptLines.push(dashedLine);
+receiptLines.push(dashedLine);
 
-    receiptCart.items.forEach((item) => {
-      const qty = String(item.quantity);
+// TABLE ROWS
+receiptCart.items.forEach((item) => {
+  const qty = String(item.quantity);
 
-      const maxNameLength = WIDTH - qty.length - 1;
+  const maxItemLength = WIDTH - 4;
 
-      const itemName =
-        item.product.name.length > maxNameLength
-          ? item.product.name.substring(0, maxNameLength)
-          : item.product.name;
+  let itemName = item.product.name;
 
-      receiptLines.push(
-        itemName.padEnd(maxNameLength, " ") +
-          " " +
-          qty.padStart(2, " "),
-      );
-    });
+  if (itemName.length > maxItemLength) {
+    itemName = itemName.substring(0, maxItemLength);
+  }
 
-    receiptLines.push(line);
+  receiptLines.push(
+    itemName.padEnd(maxItemLength, " ") +
+    qty.padStart(4, " ")
+  );
+});
 
-    // TOTAL ITEMS
-    receiptLines.push(
-      "TOTAL ITEMS TO BE SERVED".padEnd(25, " ") +
-        String(totalItems).padStart(7, " "),
-    );
+receiptLines.push(line);
 
-    receiptLines.push(line);
+// TOTAL
+receiptLines.push(
+  "TOTAL ITEMS TO BE SERVED".padEnd(28, " ") +
+  String(totalItems).padStart(4, " ")
+);
 
-    // No prices
-    // No total amount
-    // No customer/kitchen copy
-    // No welcome message
+receiptLines.push(line);
 
-    const receipt = receiptLines.join("\n");
+const receipt = receiptLines.join("\n");
 
     const result = await Printer.printReceipt({ receipt });
 

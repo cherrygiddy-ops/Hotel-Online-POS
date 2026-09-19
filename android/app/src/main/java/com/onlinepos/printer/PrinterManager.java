@@ -71,11 +71,12 @@ public class PrinterManager {
 
         PrintTextFormat format = new PrintTextFormat();
 
-        // Thermal printer receipt settings
-        format.textSize = 24;
+        format.textSize = 26;
         format.align = 0;      // left
         format.style = 1;      // bold
         format.font = 3;       // monospace
+        format.scaleX = 1.0f;
+        format.scaleY = 1.0f;      // monospace
 
         int result = printerService.printText(receipt, format);
 
