@@ -51,10 +51,10 @@ const handleReprintReceipt = async (
     const waiterName =
       prompt("Enter waiter name for this receipt:") || "Unknown";
 
-    // Printer width for 58mm thermal printer
+    // 58mm thermal printer
     const WIDTH = 32;
-    const ITEM_WIDTH = 28;
-    const QTY_WIDTH = 4;
+    const ITEM_WIDTH = 20;
+    const PRICE_WIDTH = 12;
 
     const center = (text: string) => {
       const clean = text.slice(0, WIDTH);
@@ -69,82 +69,137 @@ const handleReprintReceipt = async (
     const line = "=".repeat(WIDTH);
     const dashedLine = "-".repeat(WIDTH);
 
-    // Calculate total items
-    const totalItems = receipt.orderItems.reduce(
-      (sum, item) => sum + Number(item.quantity || 0),
+    // Calculate total amount
+    const calculatedTotal = receipt.orderItems.reduce(
+      (sum, item) => {
+        const price = Number(item.product.price) || 0;
+        const quantity = Number(item.quantity) || 0;
+
+        return sum + price * quantity;
+      },
       0
     );
 
+    const receiptTotal =
+      Number(receipt.totalPrice) || calculatedTotal;
+
     const receiptLines: string[] = [];
 
+    // ==========================================
     // HEADER
+    // ==========================================
+
     receiptLines.push(center("STEAK HOUSE HOTEL"));
-    receiptLines.push(center("KITCHEN COPY"));
+    receiptLines.push(center("CUSTOMER COPY"));
     receiptLines.push(line);
 
-    // RECEIPT DETAILS
+    receiptLines.push("Till No: 5631334");
     receiptLines.push(`Receipt No: ${receipt.orderId}`);
-    receiptLines.push(`Requested By: ${waiterName}`);
+    receiptLines.push(`Served By: ${waiterName}`);
+    receiptLines.push(
+      `Date: ${new Date(receipt.orderDate).toLocaleString()}`
+    );
 
     receiptLines.push(line);
 
+    // ==========================================
     // TABLE HEADER
+    // ==========================================
+
     receiptLines.push(
       "ITEM".padEnd(ITEM_WIDTH, " ") +
-        "QTY".padStart(QTY_WIDTH, " ")
+        "PRICE".padStart(PRICE_WIDTH, " ")
     );
 
     receiptLines.push(dashedLine);
 
-    // TABLE ITEMS
+    // ==========================================
+    // ITEMS
+    // ==========================================
+
     receipt.orderItems.forEach((item) => {
-      const qty = String(item.quantity || 0);
-      let itemName = item.product.name || "";
+      const price =
+        Number(item.product.price) || 0;
+
+      const quantity =
+        Number(item.quantity) || 0;
+
+      const itemTotal = price * quantity;
+
+      let itemName =
+        `${item.product.name} x${quantity}`;
 
       // Keep item name inside ITEM column
       if (itemName.length > ITEM_WIDTH) {
         itemName = itemName.substring(0, ITEM_WIDTH);
       }
 
+      const priceText =
+        `KES ${itemTotal.toFixed(2)}`;
+
       receiptLines.push(
         itemName.padEnd(ITEM_WIDTH, " ") +
-          qty.padStart(QTY_WIDTH, " ")
+          priceText.padStart(PRICE_WIDTH, " ")
       );
     });
 
     receiptLines.push(line);
 
-    // TOTAL ITEMS
+    // ==========================================
+    // TOTAL AMOUNT
+    // ==========================================
+
+    const totalText =
+      `KES ${receiptTotal.toFixed(2)}`;
+
     receiptLines.push(
-      "TOTAL ITEMS TO BE SERVED".padEnd(ITEM_WIDTH, " ") +
-        String(totalItems).padStart(QTY_WIDTH, " ")
+      "TOTAL AMOUNT".padEnd(ITEM_WIDTH, " ") +
+        totalText.padStart(PRICE_WIDTH, " ")
     );
 
     receiptLines.push(line);
 
-    const receiptText = receiptLines.join("\n");
+    // ==========================================
+    // FOOTER
+    // ==========================================
+
+    receiptLines.push(center("Thank you!"));
+    receiptLines.push(center("Welcome again 🌟"));
+
+    const receiptText =
+      receiptLines.join("\n");
 
     console.log(
-      "Sending reprint directly to Android printer:",
-      receiptText
+      "Sending reprint directly to Android printer:"
     );
+    console.log(receiptText);
 
-    // ANDROID BRIDGE
+    // ==========================================
+    // ANDROID PRINTER BRIDGE
+    // ==========================================
+
     const result = await Printer.printReceipt({
       receipt: receiptText,
     });
 
-    console.log("Native printer result:", result);
+    console.log(
+      "Native printer result:",
+      result
+    );
 
     if (result.result === 0) {
       alert("Receipt reprinted successfully");
     } else {
       alert(
-        "Printer returned error: " + result.result
+        "Printer returned error: " +
+          result.result
       );
     }
   } catch (error) {
-    console.error("Reprint error:", error);
+    console.error(
+      "Reprint error:",
+      error
+    );
 
     alert(
       "Reprinting failed: " +
