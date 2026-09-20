@@ -27,14 +27,15 @@ const publisherLinks = [
 
 export function WaiterSideBar() {
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("loho-auth");
-    sessionStorage.removeItem("loho-role");
-    navigate("/");
-  };
+const handleLogout = () => {
+  setOpenMobile(false);
+  sessionStorage.removeItem("loho-auth");
+  sessionStorage.removeItem("loho-role");
+  navigate("/");
+};
 
   return (
     <Sidebar collapsible="icon">
@@ -59,14 +60,15 @@ export function WaiterSideBar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
-                      to={item.url}
-                      end
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
+  to={item.url}
+  end
+  onClick={() => setOpenMobile(false)}
+  className="hover:bg-sidebar-accent/50"
+  activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+>
+  <item.icon className="mr-2 h-4 w-4" />
+  {!collapsed && <span>{item.title}</span>}
+</NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
