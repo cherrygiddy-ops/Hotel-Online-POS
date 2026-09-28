@@ -94,10 +94,10 @@ const filteredOrders = search
           Paid Receipts: {summary?.paidReceipts ?? 0}
         </div>
         <div className="bg-orange-500 text-white p-3 rounded shadow text-center">
-          Total Receipts (Paid): {summary?.totalReceipts ?? 0}
+          Total Receipts : {summary?.totalReceipts ?? 0}
         </div>
         <div className="bg-blue-500 text-white p-3 rounded shadow text-center">
-          Total Sales (Paid): KES {summary?.totalSales ?? 0}
+          Total Sales : KES {summary?.totalSales ?? 0}
         </div>
       </div>
 
